@@ -14,5 +14,6 @@ typedef struct kem_t{
     kem_keypair_fn keypair;
     kem_encaps_fn encaps;
     kem_decaps_fn decaps;
+    void *backend;
 } kem_t;
 #endif
