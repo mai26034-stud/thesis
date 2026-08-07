@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+void kem_oqs_close(kem_t *k);
+
 static kem_status_t translator_of_oqs_status(OQS_STATUS st){
     if(st == OQS_SUCCESS) return KEM_SUCCESS;
     else return KEM_ERROR;
