@@ -44,6 +44,7 @@ kem_t * kem_oqs_open(const char *name){
          k->keypair = oqs_keypair;
          k->encaps = oqs_encaps;
          k->decaps = oqs_decaps;
+         k->close = kem_oqs_open;
          return k;
 }
 
