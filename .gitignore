@@ -1,3 +1,4 @@
 vendor/
 smoke/smoke
 *.o
+src/test_kem
