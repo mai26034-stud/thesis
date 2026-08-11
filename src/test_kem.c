@@ -52,4 +52,5 @@ static int run_roundtrip(const char *name){
     free(ss1);
     free(ss2);
     kem_close(k);
+    return 0;
 }
