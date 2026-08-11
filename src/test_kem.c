@@ -41,9 +41,9 @@ static int run_roundtrip(const char *name){
     }
 
     if(memcmp(ss1, ss2, kem_ss_len(k)) == 0){
-        printf("[%s] ROUNDTRIP OK: shared secrets do in fact match :)", name);
+        printf("[%s] ROUNDTRIP OK: shared secrets do in fact match :)\n", name);
     } else{
-        printf("ROUNDTRIP FAILED: The secrets do not in fact match :(");
+        printf("ROUNDTRIP FAILED: The secrets do not in fact match :(\n");
         return 1;
     }
     free(pk);
