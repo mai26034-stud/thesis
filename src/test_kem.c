@@ -3,8 +3,20 @@
 #include <stdlib.h>
 #include <string.h>
 
+static int run_roundtrip(const char *name);
+
 int main(){
-    kem_t *k = kem_open("HQC-3");
+    const char algorithms[] = { "ML-KEM-768", "HQC-3"};
+    size_t n = size_of(algorithms)/size_of(algorithms[0]);
+    int failures = 0;
+    for(size_t i = 0; i < n; i++){
+        if(run_roundtrip(algorithms[i]) != 0) failures++;
+    }
+    return failures;
+}
+
+static int run_roundtrip(const char *name){
+    kem_t *k = kem_open(name);
     if(k == NULL) return 1;
     printf("All is good\n");
    
@@ -29,7 +41,7 @@ int main(){
     }
 
     if(memcmp(ss1, ss2, kem_ss_len(k)) == 0){
-        printf("ROUNDTRIP OK: shared secrets do in fact match :)");
+        printf("[%s] ROUNDTRIP OK: shared secrets do in fact match :)", name);
     } else{
         printf("ROUNDTRIP FAILED: The secrets do not in fact match :(");
         return 1;
@@ -40,5 +52,4 @@ int main(){
     free(ss1);
     free(ss2);
     kem_close(k);
-    return 0;
 }
