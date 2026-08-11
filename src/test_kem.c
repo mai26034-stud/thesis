@@ -6,8 +6,8 @@
 static int run_roundtrip(const char *name);
 
 int main(){
-    const char algorithms[] = { "ML-KEM-768", "HQC-3"};
-    size_t n = size_of(algorithms)/size_of(algorithms[0]);
+    const char *algorithms[] = { "ML-KEM-768", "HQC-3"};
+    size_t n = sizeof(algorithms)/sizeof(algorithms[0]);
     int failures = 0;
     for(size_t i = 0; i < n; i++){
         if(run_roundtrip(algorithms[i]) != 0) failures++;
