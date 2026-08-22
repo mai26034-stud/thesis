@@ -4,6 +4,7 @@
 
 kem_t *kem_oqs_open(const char *name);
 kem_t *kem_x25519_open(const char *name);
+kem_t *kem_hybrid_open(const char *name);
 
 typedef kem_t *(*kem_opener_fn)(const char*);
 typedef struct {
@@ -14,7 +15,8 @@ typedef struct {
 static const kem_registry_entry_t registry[] = {
          { "ML-KEM-768", kem_oqs_open },
          { "HQC-3", kem_oqs_open },
-         { "X25519", kem_x25519_open }
+         { "X25519", kem_x25519_open },
+         { "X-Wing", kem_hybrid_open }
 };
 
 kem_t *kem_open(const char *name){
