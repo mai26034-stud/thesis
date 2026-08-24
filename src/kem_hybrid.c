@@ -134,6 +134,12 @@ static kem_status_t kem_hybrid_decaps(const kem_t *k, const uint8_t *sk, const u
         ForceZero(ssX, SS_LEN);
         return KEM_ERROR;
     }
+    ret = xwing_combiner(ssM, ssX, ct + CTM_LEN, sk + SKM_LEN + PKX_LEN, ss);
+    if(ret != KEM_SUCCESS){
+        ForceZero(ssM, SS_LEN);
+        ForceZero(ssX, SS_LEN);
+        return KEM_ERROR;
+    }
     ForceZero(ssM, SS_LEN);
     ForceZero(ssX, SS_LEN);
     return KEM_SUCCESS;
