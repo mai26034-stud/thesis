@@ -149,10 +149,13 @@ static kem_status_t kem_hybrid_decaps(const kem_t *k, const uint8_t *sk, const u
 void kem_hybrid_close(kem_t *k){
     if(k == NULL) return;
     hybrid_ctx_t *ctx = (hybrid_ctx_t *)k->backend;
-    if(ctx == NULL) return;
+    if(ctx != NULL){
+        kem_close(ctx->mlkem);
+        kem_close(ctx->x25519);
+        free(ctx);
+    }
     kem_close(ctx->mlkem);
     kem_close(ctx->x25519);
-    free(ctx);
     free(k);
     return;
 }
