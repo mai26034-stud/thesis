@@ -116,3 +116,25 @@ static kem_status_t kem_hybrid_encaps(const kem_t *k, const uint8_t *pk, uint8_t
     ForceZero(ssX, SS_LEN);
     return KEM_SUCCESS;
 }
+
+static kem_status_t kem_hybrid_decaps(const kem_t *k, const uint8_t *sk, const uint8_t *ct, uint8_t *ss){
+    hybrid_ctx_t *ctx = (hybrid_ctx_t *)k->backend;
+    if(ctx == NULL) return KEM_ERROR;
+    uint8_t ssM[SS_LEN];
+    uint8_t ssX[SS_LEN];
+    kem_status_t ret = kem_decaps(ctx->mlkem, sk, ct, ssM);
+    if(ret != KEM_SUCCESS){
+        ForceZero(ssM, SS_LEN);
+        ForceZero(ssX, SS_LEN);
+        return KEM_ERROR;
+    }
+    ret = kem_decaps(ctx->x25519, sk + SKM_LEN, ct + CTM_LEN, ssX);
+    if(ret != KEM_SUCCESS){
+        ForceZero(ssM, SS_LEN);
+        ForceZero(ssX, SS_LEN);
+        return KEM_ERROR;
+    }
+    ForceZero(ssM, SS_LEN);
+    ForceZero(ssX, SS_LEN);
+    return KEM_SUCCESS;
+}
