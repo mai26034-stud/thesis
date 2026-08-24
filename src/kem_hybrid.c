@@ -99,7 +99,10 @@ static kem_status_t kem_hybrid_encaps(const kem_t *k, const uint8_t *pk, uint8_t
     uint8_t ssM[SS_LEN];
     uint8_t ssX[SS_LEN];
     kem_status_t ret = kem_encaps(ctx->mlkem, pk, ct, ssM);
-    if(ret != KEM_SUCCESS) return KEM_ERROR;
+    if(ret != KEM_SUCCESS){
+        ForceZero(ssM, SS_LEN);
+        return KEM_ERROR;
+    }
     ret = kem_encaps(ctx->x25519, pk + PKM_LEN, ct + CTM_LEN, ssX);
     if(ret != KEM_SUCCESS){
         ForceZero(ssM, SS_LEN);
@@ -141,4 +144,15 @@ static kem_status_t kem_hybrid_decaps(const kem_t *k, const uint8_t *sk, const u
     ForceZero(ssM, SS_LEN);
     ForceZero(ssX, SS_LEN);
     return KEM_SUCCESS;
+}
+
+void kem_hybrid_close(kem_t *k){
+    if(k == NULL) return;
+    hybrid_ctx_t *ctx = (hybrid_ctx_t *)k->backend;
+    if(ctx == NULL) return;
+    kem_close(ctx->mlkem);
+    kem_close(ctx->x25519);
+    free(ctx);
+    free(k);
+    return;
 }
