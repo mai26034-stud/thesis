@@ -154,8 +154,6 @@ void kem_hybrid_close(kem_t *k){
         kem_close(ctx->x25519);
         free(ctx);
     }
-    kem_close(ctx->mlkem);
-    kem_close(ctx->x25519);
     free(k);
     return;
 }
