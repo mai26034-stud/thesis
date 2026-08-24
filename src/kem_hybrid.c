@@ -93,20 +93,25 @@ static kem_status_t kem_hybrid_keygen(const kem_t *k, uint8_t *pk, uint8_t *sk){
     return KEM_SUCCESS;
 }
 
-static kem_status_t kem_hybrid_encaps(const kem_t *, const uint8_t *, uint8_t *, uint8_t *){
-    hybrid_ctx_t *ctx = (hybrid_ctx_x *)k->backend;
-    if(ctx == NULL){
-        free(k);
-        return KEM_ERROR;
-    }
+static kem_status_t kem_hybrid_encaps(const kem_t *k, const uint8_t *pk, uint8_t *ct, uint8_t *ss){
+    hybrid_ctx_t *ctx = (hybrid_ctx_t *)k->backend;
+    if(ctx == NULL) return KEM_ERROR;
     uint8_t ssM[SS_LEN];
     uint8_t ssX[SS_LEN];
     kem_status_t ret = kem_encaps(ctx->mlkem, pk, ct, ssM);
     if(ret != KEM_SUCCESS) return KEM_ERROR;
-    kem_status_t ret = kem_encaps(ctx->x25519, pk + PKM_LEN, ct + CTM_LEN, ssX);
-    if(ret != KEM_SUCCESS) return KEM_ERROR;
-    kem_status_t ret = xwing_combiner(ssM, ssX, ct + CTM_LEN, pk + PKM_LEN, ss);
-    if(ret != KEM_SUCCESS) return KEM_ERROR;
+    ret = kem_encaps(ctx->x25519, pk + PKM_LEN, ct + CTM_LEN, ssX);
+    if(ret != KEM_SUCCESS){
+        ForceZero(ssM, SS_LEN);
+        ForceZero(ssX, SS_LEN);
+        return KEM_ERROR;
+    }
+    ret = xwing_combiner(ssM, ssX, ct + CTM_LEN, pk + PKM_LEN, ss);
+    if(ret != KEM_SUCCESS){
+        ForceZero(ssM, SS_LEN);
+        ForceZero(ssX, SS_LEN);
+        return KEM_ERROR;
+    }
     ForceZero(ssM, SS_LEN);
     ForceZero(ssX, SS_LEN);
     return KEM_SUCCESS;
