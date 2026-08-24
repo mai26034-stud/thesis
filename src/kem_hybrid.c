@@ -103,7 +103,6 @@ static kem_status_t kem_hybrid_encaps(const kem_t *k, const uint8_t *pk, uint8_t
     ret = kem_encaps(ctx->x25519, pk + PKM_LEN, ct + CTM_LEN, ssX);
     if(ret != KEM_SUCCESS){
         ForceZero(ssM, SS_LEN);
-        ForceZero(ssX, SS_LEN);
         return KEM_ERROR;
     }
     ret = xwing_combiner(ssM, ssX, ct + CTM_LEN, pk + PKM_LEN, ss);
@@ -125,7 +124,6 @@ static kem_status_t kem_hybrid_decaps(const kem_t *k, const uint8_t *sk, const u
     kem_status_t ret = kem_decaps(ctx->mlkem, sk, ct, ssM);
     if(ret != KEM_SUCCESS){
         ForceZero(ssM, SS_LEN);
-        ForceZero(ssX, SS_LEN);
         return KEM_ERROR;
     }
     ret = kem_decaps(ctx->x25519, sk + SKM_LEN, ct + CTM_LEN, ssX);
