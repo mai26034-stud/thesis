@@ -16,3 +16,14 @@ kem_status_t transcript_append(transcript_t *t, const uint8_t *msg, size_t msg_l
      t->len += msg_len;
      return KEM_SUCCESS;
 }
+
+kem_status_t transcript_get_hash(const transcript_t *t, uint8_t *out){
+     if(t == NULL || out == NULL) return KEM_ERROR;
+     int ret = wcInitSha256(&sha);
+     if(ret != 0) return KEM_ERROR;
+     ret = wc_Sha256Update(&sha, t->buffer, (word32)t->len);
+     if(ret != 0) return KEM_ERROR;
+     ret = wc_Sha256Final(&sha, out);
+     if(ret != 0) return KEM_ERROR;
+     return KEM_SUCCESS;
+}
