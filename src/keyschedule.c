@@ -37,23 +37,36 @@ static kem_status_t hkdf_expand_label(const uint8_t *secret, size_t secret_len, 
 
 static kem_status_t transcript_hash(const uint8_t *msgs, size_t msgs_len, uint8_t *out){
      wc_Sha256 sha;
-     kem_status_t ret = wc_InitSha256(&sha);
-     if(ret != KEM_SUCCESS) return KEM_ERROR;
+     int ret = wc_InitSha256(&sha);
+     if(ret != 0) return KEM_ERROR;
 
      ret = wc_Sha256Update(&sha, msgs, (word32)msgs_len);
-     if(ret != KEM_SUCCESS) return KEM_ERROR;
+     if(ret != 0) return KEM_ERROR;
 
      ret = wc_Sha256Final(&sha, out);
-     if(ret !- KEM_SUCCESS) return KEM_ERROR;
+     if(ret != 0) return KEM_ERROR;
      return KEM_SUCCESS;
 }
 
 static kem_status_t derive_secret(const uint8_t *secret, size_t secret_len, const char *label, const uint8_t *msgs, size_t msgs_len, uint8_t *out){
      uint8_t ctx_hash[32];
-     kem_status_t ret = transcript_hash(msgs, msgs_len, ctx_hash);
-     if(ret != KEM_SUCCESS) return KEM_ERROR;
+     int ret = transcript_hash(msgs, msgs_len, ctx_hash);
+     if(ret != 0) return KEM_ERROR;
 
      ret = hkdf_expand_label(secret, secret_len, label, ctx_hash, 32, out, 32);
-     if(ret != KEM_SUCCESS) return KEM_ERROR;
+     if(ret != 0) return KEM_ERROR;
+     return KEM_SUCCESS;
+}
+
+static kem_status_t derive_handshake_secrets(const uint8_t *ss_ephemeral, size_t ss_eph_len, const uint8_t *ss_auth, size_t ss_auth_len, uint8_t *main_secret_out){
+     uint8_t zeros[32] = {0};
+     uint8_t empty[1] = {0};
+     dES[32] = derive_secret(early_secret, "derived", "");
+     int ret = wc_HKDF_Extract(hashtype ,dES, len(dES), ss_ephemeral, ss_eph_len, handshake_secret[32]);
+     if(ret != 0) return KEM_ERROR;
+
+     dHS[32] = derive_secret(handshake_secret, "derived", "");
+     dAGS[32] = derive_secret(auth_handshake_secret, "derived", "");
+     
      return KEM_SUCCESS;
 }
