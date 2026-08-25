@@ -18,6 +18,7 @@ kem_status_t transcript_append(transcript_t *t, const uint8_t *msg, size_t msg_l
 }
 
 kem_status_t transcript_get_hash(const transcript_t *t, uint8_t *out){
+     WC_SHA256 sha;
      if(t == NULL || out == NULL) return KEM_ERROR;
      int ret = wcInitSha256(&sha);
      if(ret != 0) return KEM_ERROR;
