@@ -66,7 +66,15 @@ static kem_status_t derive_handshake_secrets(const uint8_t *ss_ephemeral, size_t
      if(ret != 0) return KEM_ERROR;
 
      dHS[32] = derive_secret(handshake_secret, "derived", "");
-     dAGS[32] = derive_secret(auth_handshake_secret, "derived", "");
-     
+     dAHS[32] = derive_secret(auth_handshake_secret, "derived", "");
+
+     ret = wc_HKDF_Extract(hashtype ,dAHS, len(dAHS), zeros, len(zeors), main_secret_out);
+     if(ret != 0) return KEM_ERROR;
+
+     ForceZero(zeros);
+     ForceZero(empty);
+     ForceZero(dES);
+     ForceZero(dHS);
+     ForceZero(dAHS);
      return KEM_SUCCESS;
 }
