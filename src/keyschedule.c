@@ -93,5 +93,5 @@ static kem_status_t derive_handshake_secrets(const uint8_t *ss_ephemeral, size_t
      ForceZero(dHS, 32);
      ForceZero(auth_handshake_secret, 32);
      ForceZero(dAHS, 32);
-     return KEM_SUCCESS;
+     return KEM_SUCCESS;  // Εκκρεμεί να ελεγχθεί ότι το WC_SHA256 είναι το σωστό όνομα μεταβλητής, ότι υπάρχουν τα wc_HKDF_Extract και wc_HKDF_Expand αλλιώς να τα ενεργοποιήσω, ότι η υπογραφή το wc_HKDF_Extract έχει την σωστή σειρά εισόδων και ότι το wc_InitSha256 παίρνει heap/devId εισόδους όπως το έχω.
 }
