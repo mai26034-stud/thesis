@@ -61,20 +61,37 @@ static kem_status_t derive_secret(const uint8_t *secret, size_t secret_len, cons
 static kem_status_t derive_handshake_secrets(const uint8_t *ss_ephemeral, size_t ss_eph_len, const uint8_t *ss_auth, size_t ss_auth_len, uint8_t *main_secret_out){
      uint8_t zeros[32] = {0};
      uint8_t empty[1] = {0};
-     dES[32] = derive_secret(early_secret, "derived", "");
-     int ret = wc_HKDF_Extract(hashtype ,dES, len(dES), ss_ephemeral, ss_eph_len, handshake_secret[32]);
+     uint8_t early_secret[32];
+     uint8_t dES[32];
+     uint8_t handshake_secret[32];
+     uint8_t dHS[32];
+     uint8_t auth_handshake_secret[32];
+     uint8_t dAHS[32];
+     int ret = wc_HKDF_Extract(WC_SHA256, zeros, 32, zeros, 32, early_secret);
      if(ret != 0) return KEM_ERROR;
 
-     dHS[32] = derive_secret(handshake_secret, "derived", "");
-     dAHS[32] = derive_secret(auth_handshake_secret, "derived", "");
-
-     ret = wc_HKDF_Extract(hashtype ,dAHS, len(dAHS), zeros, len(zeors), main_secret_out);
+     ret = derive_secret(early_secret, 32, "derived", empty, 0, dES);
      if(ret != 0) return KEM_ERROR;
 
-     ForceZero(zeros);
-     ForceZero(empty);
-     ForceZero(dES);
-     ForceZero(dHS);
-     ForceZero(dAHS);
+     ret = wc_HKDF_Extract(WC_SHA256, dES, 32, ss_ephemeral, ss_eph_len, handshake_secret);
+     if(ret != 0) return KEM_ERROR;
+
+     ret = derive_secret(handshake_secret, 32, "derived", empty, 0, dHS);
+     if(ret != 0) return KEM_ERROR;
+
+     ret = wc_HKDF_Extract(WC_SHA256, dHS, 32, ss_auth, ss_auth_len, auth_handshake_secret);
+     if(ret != 0) return KEM_ERROR;
+
+     ret = derive_secret(auth_handshake_secret, 32, "derived", empty, 0, dAHS);
+     if(ret != 0) return KEM_ERROR;
+
+     ret = wc_HKDF_Extract(WC_SHA256, dAHS, 32, zeros, 32, main_secret_out);
+     if(ret != 0) return KEM_ERROR;
+     ForceZero(early_secret, 32);
+     ForceZero(dES, 32);
+     ForceZero(handshake_secret, 32);
+     ForceZero(dHS, 32);
+     ForceZero(auth_handshake_secret, 32);
+     ForceZero(dAHS, 32);
      return KEM_SUCCESS;
 }
