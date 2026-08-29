@@ -1,3 +1,4 @@
+#include "keyschedule.h"
 #include "kem.h"
 #include "kem_internal.h"
 #include <wolfssl/options.h>
@@ -58,7 +59,7 @@ static kem_status_t derive_secret(const uint8_t *secret, size_t secret_len, cons
      return KEM_SUCCESS;
 }
 
-static kem_status_t derive_handshake_secrets(const uint8_t *ss_ephemeral, size_t ss_eph_len, const uint8_t *ss_auth, size_t ss_auth_len, uint8_t *main_secret_out){
+kem_status_t derive_handshake_secrets(const uint8_t *ss_ephemeral, size_t ss_eph_len, const uint8_t *ss_auth, size_t ss_auth_len, uint8_t *main_secret_out){
      uint8_t zeros[32] = {0};
      uint8_t empty[1] = {0};
      uint8_t early_secret[32];
@@ -87,11 +88,11 @@ static kem_status_t derive_handshake_secrets(const uint8_t *ss_ephemeral, size_t
 
      ret = wc_HKDF_Extract(WC_SHA256, dAHS, 32, zeros, 32, main_secret_out);
      if(ret != 0) return KEM_ERROR;
-     ForceZero(early_secret, 32);
-     ForceZero(dES, 32);
-     ForceZero(handshake_secret, 32);
-     ForceZero(dHS, 32);
-     ForceZero(auth_handshake_secret, 32);
-     ForceZero(dAHS, 32);
+     wc_ForceZero(early_secret, 32);
+     wc_ForceZero(dES, 32);
+     wc_ForceZero(handshake_secret, 32);
+     wc_ForceZero(dHS, 32);
+     wc_ForceZero(auth_handshake_secret, 32);
+     wc_ForceZero(dAHS, 32);
      return KEM_SUCCESS;  // Εκκρεμεί να ελεγχθεί ότι το WC_SHA256 είναι το σωστό όνομα μεταβλητής, ότι υπάρχουν τα wc_HKDF_Extract και wc_HKDF_Expand αλλιώς να τα ενεργοποιήσω, ότι η υπογραφή το wc_HKDF_Extract έχει την σωστή σειρά εισόδων και ότι το wc_InitSha256 παίρνει heap/devId εισόδους όπως το έχω.
 }
