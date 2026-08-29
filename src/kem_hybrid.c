@@ -28,22 +28,13 @@ void kem_hybrid_close(kem_t *);
 
 static kem_status_t xwing_combiner(const uint8_t *ssM, const uint8_t *ssX, const uint8_t *ctX, const uint8_t *pkX, uint8_t *ss_out){
     wc_Sha3 cntxt;
-    int ret = wc_InitSha3_256(&cntxt, NULL, INVALID_DEVID);
-    if(ret != 0){
-        wc_Sha3_256_Free(&cntxt);
-        return KEM_ERROR;
-    }
-    ret = 0;
-    if(wc_Sha3_256_Update(&cntxt, XWING_LABEL, 6)) ret++;
-    if(wc_Sha3_256_Update(&cntxt, ssM, 32)) ret++;
-    if(wc_Sha3_256_Update(&cntxt, ssX, 32)) ret++;
-    if(wc_Sha3_256_Update(&cntxt, ctX, 32)) ret++;
-    if(wc_Sha3_256_Update(&cntxt, pkX, 32)) ret++;
-    if(wc_Sha3_256_Final(&cntxt, ss_out)) ret++;
-    if(ret != 6){
-         wc_Sha3_256_Free(&cntxt);
-         return KEM_ERROR;
-    }
+    if(wc_InitSha3_256(&cntxt, NULL, INVALID_DEVID) != 0){wc_Sha3_256_Free(&cntxt); return KEM_ERROR;}
+    if(wc_Sha3_256_Update(&cntxt, XWING_LABEL, 6) != 0){wc_Sha3_256_Free(&cntxt); return KEM_ERROR;}
+    if(wc_Sha3_256_Update(&cntxt, ssM, 32) != 0){wc_Sha3_256_Free(&cntxt); return KEM_ERROR;}
+    if(wc_Sha3_256_Update(&cntxt, ssX, 32) != 0){wc_Sha3_256_Free(&cntxt); return KEM_ERROR;}
+    if(wc_Sha3_256_Update(&cntxt, ctX, 32) != 0){wc_Sha3_256_Free(&cntxt); return KEM_ERROR;}
+    if(wc_Sha3_256_Update(&cntxt, pkX, 32) != 0){wc_Sha3_256_Free(&cntxt); return KEM_ERROR;}
+    if(wc_Sha3_256_Final(&cntxt, ss_out) != 0){wc_Sha3_256_Free(&cntxt); return KEM_ERROR;}
     wc_Sha3_256_Free(&cntxt);
     return KEM_SUCCESS;
 }
@@ -100,22 +91,22 @@ static kem_status_t kem_hybrid_encaps(const kem_t *k, const uint8_t *pk, uint8_t
     uint8_t ssX[SS_LEN];
     kem_status_t ret = kem_encaps(ctx->mlkem, pk, ct, ssM);
     if(ret != KEM_SUCCESS){
-        ForceZero(ssM, SS_LEN);
+        wc_ForceZero(ssM, SS_LEN);
         return KEM_ERROR;
     }
     ret = kem_encaps(ctx->x25519, pk + PKM_LEN, ct + CTM_LEN, ssX);
     if(ret != KEM_SUCCESS){
-        ForceZero(ssM, SS_LEN);
+        wc_ForceZero(ssM, SS_LEN);
         return KEM_ERROR;
     }
     ret = xwing_combiner(ssM, ssX, ct + CTM_LEN, pk + PKM_LEN, ss);
-    if(ret != KEM_SUCCESS){
-        ForceZero(ssM, SS_LEN);
-        ForceZero(ssX, SS_LEN);
+   if(ret != KEM_SUCCESS){
+        wc_ForceZero(ssM, SS_LEN);
+        wc_ForceZero(ssX, SS_LEN);
         return KEM_ERROR;
     }
-    ForceZero(ssM, SS_LEN);
-    ForceZero(ssX, SS_LEN);
+    wc_ForceZero(ssM, SS_LEN);
+    wc_ForceZero(ssX, SS_LEN);
     return KEM_SUCCESS;
 }
 
@@ -126,23 +117,23 @@ static kem_status_t kem_hybrid_decaps(const kem_t *k, const uint8_t *sk, const u
     uint8_t ssX[SS_LEN];
     kem_status_t ret = kem_decaps(ctx->mlkem, sk, ct, ssM);
     if(ret != KEM_SUCCESS){
-        ForceZero(ssM, SS_LEN);
+        wc_ForceZero(ssM, SS_LEN);
         return KEM_ERROR;
     }
     ret = kem_decaps(ctx->x25519, sk + SKM_LEN, ct + CTM_LEN, ssX);
     if(ret != KEM_SUCCESS){
-        ForceZero(ssM, SS_LEN);
-        ForceZero(ssX, SS_LEN);
+        wc_ForceZero(ssM, SS_LEN);
+        wc_ForceZero(ssX, SS_LEN);
         return KEM_ERROR;
     }
     ret = xwing_combiner(ssM, ssX, ct + CTM_LEN, sk + SKM_LEN + PKX_LEN, ss);
     if(ret != KEM_SUCCESS){
-        ForceZero(ssM, SS_LEN);
-        ForceZero(ssX, SS_LEN);
+        wc_ForceZero(ssM, SS_LEN);
+        wc_ForceZero(ssX, SS_LEN);
         return KEM_ERROR;
     }
-    ForceZero(ssM, SS_LEN);
-    ForceZero(ssX, SS_LEN);
+    wc_ForceZero(ssM, SS_LEN);
+    wc_ForceZero(ssX, SS_LEN);
     return KEM_SUCCESS;
 }
 

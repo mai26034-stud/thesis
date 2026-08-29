@@ -6,7 +6,7 @@
 static int run_roundtrip(const char *name);
 
 int main(){
-    const char *algorithms[] = { "ML-KEM-768", "HQC-3", "X25519"};
+    const char *algorithms[] = { "ML-KEM-768", "HQC-3", "X25519", "X-Wing"};
     size_t n = sizeof(algorithms)/sizeof(algorithms[0]);
     int failures = 0;
     for(size_t i = 0; i < n; i++){
@@ -40,7 +40,16 @@ static int run_roundtrip(const char *name){
     kem_status_t r2 = kem_encaps(k, pk, ct, ss1);
     kem_status_t r3 = kem_decaps(k, sk, ct, ss2);
 
-    printf("[%s] r1=%d r2=%d r3=%d\n", name, r1, r2, r3);
+    if(r1 != KEM_SUCCESS || r2 != KEM_SUCCESS || r3 != KEM_SUCCESS){
+        printf("[%s] operation FAILED: r1=%d r2=%d r3=%d\n", name, r1, r2, r3);
+        free(pk);
+        free(sk);
+        free(ct);
+        free(ss1);
+        free(ss2);
+        kem_close(k);
+        return 1;
+    }
 
     if(memcmp(ss1, ss2, kem_ss_len(k)) == 0){
         printf("[%s] ROUNDTRIP OK: shared secrets do in fact match :)\n", name);
