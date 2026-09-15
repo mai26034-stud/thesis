@@ -33,16 +33,17 @@ kem_status_t wire_write(uint8_t type, const uint8_t *content, size_t content_len
 }
 
 kem_status_t wire_read(const uint8_t *in, size_t in_len, uint8_t *type_out, const uint8_t **content_out, size_t *content_len_out, size_t *consumed){
-    if(in == NULL || type_out == NULL || content_out == NULL || content_len_out == NULL || consumed == NULL) rteturn KEM_ERROR;
+    if(in == NULL || type_out == NULL || content_out == NULL || content_len_out == NULL || consumed == NULL) return KEM_ERROR;
     if(in_len < 5){
         printf("Insufficient space! Can't Proceed :(\n");
         return KEM_ERROR;
     }
-    *type_out[0] = in[0];
-    size_t content_len = ((size_t)in[1] << 24) | (size_t)in[2] << 16) | (size_t)in[3] << 8) | (size_t)in[4]);
+    *type_out = in[0];
+    size_t content_len = ((size_t)in[1] << 24) | ((size_t)in[2] << 16) | ((size_t)in[3] << 8) | ((size_t)in[4]);
     if(in_len < 5 + content_len) return KEM_ERROR;
 
    *content_out = in + 5;
    *content_len_out = content_len;
+   *consumed = 5 + content_len;
    return KEM_SUCCESS;
 }
