@@ -1,5 +1,10 @@
 #ifndef CREDENTIAL_H
 #define CREDENTIAL_H
+
+#include <stdint.h>
+#include <stddef.h>
+#include "kem.h"
+
 #define ED25519_PUB_LEN 32
 #define ED25519_PRIV_LEN 32
 #define ED25519_SIG_LEN 64
