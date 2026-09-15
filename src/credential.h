@@ -1,0 +1,12 @@
+#ifndef CREDENTIAL_H
+#define CREDENTIAL_H
+#define ED25519_PUB_LEN 32
+#define ED25519_PRIV_LEN 32
+#define ED25519_SIG_LEN 64
+#define CRED_MAX_IDENTITY 64
+#define CRED_MAX_KEM_PK 1216
+
+kem_status_t ca_keygen(uint8_t *ca_pub, uint8_t *ca_priv);
+kem_status_t credential_create(const uint8_t *identity, size_t identity_len, const uint8_t *kem_pk, size_t kem_pk_len, const uint8_t *ca_priv, uint8_t *out, size_t out_cap, size_t *written);
+kem_status_t credential_verify(const uint8_t *cred, size_t cred_len, const uint8_t *ca_pub, const uint8_t **kem_pk_out, size_t *kem_pk_len_out);
+#endif
