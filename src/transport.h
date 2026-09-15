@@ -1,6 +1,7 @@
 #ifndef TRANSPORT_H
 #define TRANSPORT_H
 #include <stddef.h>
+#include <stdint.h>
 #include "kem.h"
 
 int transport_server_accept(uint16_t port);
