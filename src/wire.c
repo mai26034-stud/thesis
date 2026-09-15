@@ -13,7 +13,7 @@ void wire_stats_init(wire_stats_t *stats){
 
 kem_status_t wire_write(uint8_t type, const uint8_t *content, size_t content_len, uint8_t *out, size_t out_cap, size_t *written, wire_stats_t *stats){
     if(out == NULL || written == NULL || stats == NULL) return KEM_ERROR;
-    if(content == NULL || content_len>0) return KEM_ERROR;
+    if(content == NULL && content_len > 0) return KEM_ERROR;
 
     size_t total = 1 + 4 + content_len;
     if(total > out_cap) return KEM_ERROR;
