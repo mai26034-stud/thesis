@@ -38,7 +38,7 @@ int transport_server_accept(uint16_t port){
     addr.sin_port = htons(port);
     addr.sin_addr.s_addr = INADDR_ANY;
 
-    if(bind(listen_fc, (struct sockaddr*)&addr, sizeof(addr)) < 0){
+    if(bind(listen_fd, (struct sockaddr*)&addr, sizeof(addr)) < 0){
         close(listen_fd);
         return -1;
     }
