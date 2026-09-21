@@ -52,3 +52,29 @@ int transport_server_accept(uint16_t port){
     if(conn_fd < 0) return -1;
     return conn_fd;
 }
+
+kem_status_t transport_send(int fd, const uint8_t *buf, size_t len){
+    if(buf == NULL || fd < 0) return KEM_ERROR;
+    size_t sent = 0;
+    while(sent < len){
+        ssize_t n = send(fd, buf + sent, len - sent, 0);
+        if(n <= 0) return KEM_ERROR;
+        sent += (size_t)n;
+    }
+    return KEM_SUCCESS;
+}
+
+kem_status_t transport_recv(int fd, uint8_t *buf, size_t len){
+    if(buf == NULL || fd < 0) return KEM_ERROR;
+    size_t received = 0;
+    while(received < len){
+        ssize_t n = recv(fd, buf + received, len - received, 0);
+        if(n <= 0) return KEM_ERROR;
+        received += (size_t)n;
+    }
+    return KEM_SUCCESS;
+}
+
+void transport_close(int fd){
+    if(fd >= 0) close(fd);
+}
