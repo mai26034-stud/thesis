@@ -6,8 +6,10 @@
 #include <sys/wait.h>
 
 #define TEST_SIZE 100000
+#define PORT 18080
 static uint8_t payload[TEST_SIZE];
 static uint8_t rcvd[TEST_SIZE];
+static uint8_t ECHOED[TEST_SIZE];
 
 int transport_testing(void);
 
@@ -17,8 +19,8 @@ int transport_testing(void){
      }
      pid_t pid = fork();
      if(pid<0) return 1;
-     else{
-          int fd = transport_server_accept(18080);
+     if(pid == 0){
+          int fd = transport_server_accept(PORT);
           if(fd<0) exit(1);
           transport_recv(fd, rcvd, TEST_SIZE);
           transport_send(fd, rcvd, TEST_SIZE);
@@ -28,10 +30,13 @@ int transport_testing(void){
      sleep(1);
      int fd = transport_client_connect("127.0.0.1", PORT);
      transport_send(fd, payload, TEST_SIZE);
-     transport_recv(fd, payload, TEST_SIZE);
-     if(memcmp(payload, rcvd) != 0) exit(1);
-     else{
-          close();
-          waitpid();
+     transport_recv(fd, echoed, TEST_SIZE);
+     transport_close(fd);
+     waitpid(pid, NULL, 0);
+     if(memcmp(payload, echoed, TEST_SIZE) == 0){
+          printf("[TRANSPORT] WORKS AS IT WAS INTENDED TO. %d bytes echoed intact :)\n", TEST_SIZE);
+          return 0;
      }
+     printf("[TRANSPORT] FAILED: There were echo mismatches :(\n");
+     return 1;
 }
