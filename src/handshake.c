@@ -6,6 +6,19 @@
 #include <string.h>
 #include <stdlib.h>
 
+static kem_status_t recv_message(int fd, uint8_t *buf, size_t buf_cap, uint8_t *type_out, const uint8_t **content_out, size_t *content_len_out, size_t *total_out){
+    if(buf == NULL || type_out == NULL || content_out == NULL || content_len_out == NULL || total_out == NULL) return KEM_ERROR;
+    if(transport_recv(fd, buf, 5) != KEM_SUCCESS) return KEM_ERROR;
+    size_t content_len = ((size_t)buf[1] << 24) | ((size_t)buf[2] << 16) | ((size_t)buf[3] << 8) | ((size_t)buf[4]);
+    if(5 + content_len > buf_cap) return KEM_ERROR;
+    if(content_len > 0) if(transport_recv(fd, buf + 5, content_len) == KEM_SUCCESS) else return KEM_ERROR;
+    size_t consumed;
+    kem_status_t t = wire_read(buf, 5 + content_len, type_out, content_out, content_len_out, &consumed);
+    if(t != KEM_SUCCESS) return KEM_ERROR;
+    *total_out = 5 + content_len;
+    return KEM_SUCCESS;
+}
+
 kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *ca_pub, uint8_t *main_secret_out, wire_stats_t *stats){
     kem_t *eph = kem_open(EPHEMERAL_KEM);
     if(eph == NULL) return KEM_ERROR;
@@ -34,19 +47,4 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
 
 kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *cred, size_t cred_len, const uint8_t *auth_sk, uint8_t *main_secret_out, wire_stats_t *stats){
     
-}
-
-static kem_status_t recv_message(int fd, uint8_t *buf, size_t buf_cap, uint8_t *type_out, const uint8_t **content_out, size_t *content_len_out, size_t *total_out){
-    if(buf == NULL || type_out == NULL || content_out == NULL || content_len_out == NULL || total_out == NULL) return KEM_ERROR;
-    transport_recv(fd, buf, 5);
-    size_t content_len = ((size_t)buf[1] << 24) | ((size_t)buf[2] << 16) | ((size_t)buf[3] << 8) | ((size_t)buf[4]);
-    if(5 + content_len > buf_cap){
-        printf("Something peculiar occured and the length of the contents seems to surpass the available space in the buffer :(");
-        return KEM_ERROR;
-    }
-    if(content_len > 0) transport_recv(fd, buf + 5, content_len);
-    t = wire_read(buf, 5 + content_len, type_out, content_out, content_len_out, &consumed);
-    if(t != KEM_SUCCESS) return KEM_ERROR;
-    *total_out = 5 + content_len;
-    return KEM_SUCCESS;
 }
