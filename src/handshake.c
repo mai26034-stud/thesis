@@ -18,12 +18,7 @@ static kem_status_t recv_message(int fd, uint8_t *buf, size_t buf_cap, uint8_t *
     kem_status_t t = wire_read(buf, 5 + content_len, type_out, content_out, content_len_out, &consumed);
     if(t != KEM_SUCCESS) return KEM_ERROR;
     *total_out = 5 + content_len;
-    t = recv_message(fd, msgbuf, sizeof(msgbuf), &type, &content, &content_len, &total);
-    if(t != KEM_SUCCESS) return KEM_ERROR;
-    if(type != WIRE_SERVER_HELLO) return KEM_ERROR;
-    transcript_append(&tr, msgbuf, total);
-    t = kem_decaps(eph, eph_sk, content, ss_eph);
-    if(t != KEM_SUCCESS) return KEM_ERROR;
+    return KEM_SUCCESS;
 }
 
 kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *ca_pub, uint8_t *main_secret_out, wire_stats_t *stats){
@@ -52,7 +47,12 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     if(t != KEM_SUCCESS) return KEM_ERROR;
     transport_send(fd, msgbuf, written);
     transcript_append(&tr, msgbuf, written);
-    return KEM_SUCCESS;
+    t = recv_message(fd, msgbuf, sizeof(msgbuf), &type, &content, &content_len, &total);
+    if(t != KEM_SUCCESS) return KEM_ERROR;
+    if(type != WIRE_SERVER_HELLO) return KEM_ERROR;
+    transcript_append(&tr, msgbuf, total);
+    t = kem_decaps(eph, eph_sk, content, ss_eph);
+    if(t != KEM_SUCCESS) return KEM_ERROR;
 }
 
 kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *cred, size_t cred_len, const uint8_t *auth_sk, uint8_t *main_secret_out, wire_stats_t *stats){
