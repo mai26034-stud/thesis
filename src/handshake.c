@@ -11,7 +11,9 @@ static kem_status_t recv_message(int fd, uint8_t *buf, size_t buf_cap, uint8_t *
     if(transport_recv(fd, buf, 5) != KEM_SUCCESS) return KEM_ERROR;
     size_t content_len = ((size_t)buf[1] << 24) | ((size_t)buf[2] << 16) | ((size_t)buf[3] << 8) | ((size_t)buf[4]);
     if(5 + content_len > buf_cap) return KEM_ERROR;
-    if(content_len > 0) if(transport_recv(fd, buf + 5, content_len) == KEM_SUCCESS) else return KEM_ERROR;
+    if(content_len > 0){
+        if(transport_recv(fd, buf + 5, content_len) == KEM_SUCCESS) return KEM_ERROR;
+    }
     size_t consumed;
     kem_status_t t = wire_read(buf, 5 + content_len, type_out, content_out, content_len_out, &consumed);
     if(t != KEM_SUCCESS) return KEM_ERROR;
