@@ -29,8 +29,8 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
       kem_close(eph);
       return KEM_ERROR;
     }
-    uint8_t eph_pk[kem_pk_len(eph)];
-    uint8_t eph_sk[kem_sk_len(eph)];
+    uint8_t eph_pk[] = malloc(kem_pk_len(auth));
+    uint8_t eph_sk[] = malloc(kem_sk_len(auth));
     uint8_t ss_eph[32];
     uint8_t ss_auth[32];
     uint8_t msgbuf[4096];
@@ -53,6 +53,8 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     transcript_append(&tr, msgbuf, total);
     t = kem_decaps(eph, eph_sk, content, ss_eph);
     if(t != KEM_SUCCESS) return KEM_ERROR;
+    free(eph_pk);
+    free(eph_sk);
 }
 
 kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *cred, size_t cred_len, const uint8_t *auth_sk, uint8_t *main_secret_out, wire_stats_t *stats){
@@ -66,4 +68,20 @@ kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *
     size_t server_auth_pk_len;
     t = credential_verify(content, content_len, ca_pub, &server_auth_pk, &server_auth_pk_len);
     if(t != KEM_SUCCESS) KEM_ERROR;
+    uint8_t *auth_ct = malloc(kem_ct_len(auth));
+    t = kem_encaps(auth, server_auth_pk, auth_ct, ss_auth);
+    if(t != KEM_SUCCESS) return KEM_ERROR;
+    t = wire_write(WIRE_CLIENT_AUTH, auth_ct, kem_ct_len, msgbuf, sizeof(msgbuf), &written, stats);
+    if(t != KEM_SUCCESS) return KEM_ERROR;
+    if(transport_send(fd, msgbuf, written) != KEM_SUCCESS) return KEM_ERROR;.
+    transcript_append(&tr, msgbuf, written);
+    t = derive_handshake_secrets(ss_eph, 32, ss_auth, 32, main_secret_out);
+    if(t != KEM_SUCCESS) return KEM_ERROR;
+    wcForceZero(ss_eph);
+    wcForceZero(ss_auth);
+    wcForceZero(eph_sk);
+    kem_close(eph);
+    kem_close(auth);
+    free(auth_ct);
+    return KEM_SUCCESS;
 }
