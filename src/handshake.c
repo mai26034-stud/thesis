@@ -56,5 +56,14 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
 }
 
 kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *cred, size_t cred_len, const uint8_t *auth_sk, uint8_t *main_secret_out, wire_stats_t *stats){
-    
+    kem_status_t t = recv_message(fd, msgbuf, sizeof(msgbuf), &type, &content, &content_len, &total);
+    if(type != WIRE_SERVER_AUTH) return KEM_ERROR;
+    const uint8_t *server_auth_pk;
+    size_t server_auth_pk_len;
+    if(transcript_append(&tr, msgbuf, total) return KEM_ERROR;
+
+    const uint8_t *server_auth_pk;
+    size_t server_auth_pk_len;
+    t = credential_verify(content, content_len, ca_pub, &server_auth_pk, &server_auth_pk_len);
+    if(t != KEM_SUCCESS) KEM_ERROR;
 }
