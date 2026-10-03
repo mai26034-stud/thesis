@@ -5,3 +5,5 @@ src/test_kem
 src/test_ks
 src/test_kem
 *.o
+src/test_wire
+src/test_transport
