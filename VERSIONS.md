@@ -15,3 +15,11 @@ Lib: -L vendor/install/lib
 ## liboqs build command (verified working)
 cmake -GNinja -DCMAKE_BUILD_TYPE=Release \
   -DOQS_MINIMAL_BUILD="KEM_ml_kem_768;KEM_hqc_3" ..
+
+## wolfSSL build command (verified working)
+./configure --prefix=$HOME/thesis/vendor/install \
+  --enable-static --disable-shared \
+  --enable-curve25519 --enable-ed25519 --enable-mlkem \
+  --enable-sha3 --enable-hkdf --enable-aesgcm \
+  --enable-chacha --enable-poly1305 --enable-keylog-export \
+  CFLAGS=-DWOLFSSL_PUBLIC_MP
