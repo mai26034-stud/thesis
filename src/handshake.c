@@ -152,7 +152,7 @@ kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *
     }
     if(transcript_append(&tr, msgbuf, total) != KEM_SUCCESS) return KEM_ERROR;
     t = kem_decaps(auth, auth_sk, content, ss_auth);
-    CHK("server: auth decaps :(");
+    CHK(t, "server: auth decaps :(");
     if(t != KEM_SUCCESS) return KEM_ERROR;
     t = derive_handshake_secrets(ss_eph, 32, ss_auth, 32, main_secret_out);
     if(t != KEM_SUCCESS) return KEM_ERROR;
