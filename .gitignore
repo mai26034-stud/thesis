@@ -7,3 +7,4 @@ src/test_kem
 *.o
 src/test_wire
 src/test_transport
+src/test_handshake
