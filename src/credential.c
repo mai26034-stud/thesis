@@ -4,7 +4,6 @@
 #include <wolfssl/wolfcrypt/memory.h>
 #include "credential.h"
 #include <string.h>
-#include <stdio.h>
 
 kem_status_t credential_create(const uint8_t *identity, size_t identity_len, const uint8_t *kem_pk, size_t kem_pk_len, const uint8_t *ca_priv, uint8_t *out, size_t out_cap, size_t *written){
     uint8_t pub[ED25519_PUB_LEN];
