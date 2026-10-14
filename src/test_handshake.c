@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include "metrics.h"
 
 static void print_hex(const char *label, const uint8_t *buf, size_t len){
     printf("%s: ", label);
@@ -30,7 +31,6 @@ static int run_handshake(const char *auth_kem_name, uint16_t port){
     if(credential_create(identity, 11, srv_pk, kem_pk_len(auth), ca_priv, cred, sizeof(cred), &cred_len) != KEM_SUCCESS) return 1;
     kem_close(auth);
 
-    printf("[%s]\n", auth_kem_name);
     pid_t pid = fork();
     if(pid < 0) return 1;
     if(pid == 0){
@@ -39,14 +39,15 @@ static int run_handshake(const char *auth_kem_name, uint16_t port){
         uint8_t ms[32];
         wire_stats_t stats;
         wire_stats_init(&stats);
-        kem_status_t r = handshake_server(fd, auth_kem_name, cred, cred_len, srv_sk, ms, &stats);
+        timings_t tm;
+        timings_init(&tm);
+        kem_status_t r = handshake_server(fd, auth_kem_name, cred, cred_len, srv_sk, ms, &stats, &tm);
         if(r != KEM_SUCCESS){
             printf("Server unfortunately failed :(\n");
             transport_close(fd);
             exit(1);
         }
-        print_hex("  server MS", ms, 32);
-        printf("  server bytes: total=%zu\n", stats.total_bytes);
+        metrics_csv_row(stdout, auth_kem_name, "server", 1, &tm, &stats);
         transport_close(fd);
         exit(0);
     }
@@ -61,13 +62,13 @@ static int run_handshake(const char *auth_kem_name, uint16_t port){
     wire_stats_t stats;
     wire_stats_init(&stats);
     int ok = 0;
-    if(handshake_client(fd, auth_kem_name, ca_pub, ms, &stats) != KEM_SUCCESS){
+    timings_t tm;
+    timings_init(&tm);
+    if(handshake_client(fd, auth_kem_name, ca_pub, ms, &stats, &tm) != KEM_SUCCESS){
         printf("  The client unfortunately failed :(\n");
         ok = 1;
-    }else{
-        print_hex("  client MS", ms, 32);
-        printf("  client bytes: auth_ct=%zu total=%zu\n", stats.bytes_by_type[WIRE_CLIENT_AUTH], stats.total_bytes);
     }
+    metrics_csv_row(stdout, auth_kem_name, "client", 1, &tm, &stats);
     transport_close(fd);
     waitpid(pid, NULL, 0);
     free(srv_pk);
@@ -77,6 +78,7 @@ static int run_handshake(const char *auth_kem_name, uint16_t port){
 
 int main(void){
     int failures = 0;
+    metrics_csv_header(stdout);
     failures += run_handshake("ML-KEM-768", 19001);
     failures += run_handshake("HQC-3", 19002);
     failures += run_handshake("X-Wing", 19003);
