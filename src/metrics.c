@@ -16,5 +16,5 @@ void timings_init(timings_t *tm){
 
 void metrics_csv_header(FILE *f){
   if(f == NULL) return;
-  fprintf(f, "config,role,iteration,""eph_keypair_ns,eph_encaps_ns,eph_decaps_ns,""cred_verify_ns,auth_encaps_ns,auth_decaps_ns,""key_schedule");
+  fprintf(f, "config,role,iteration,""eph_keypair_ns,eph_encaps_ns,eph_decaps_ns,""cred_verify_ns,auth_encaps_ns,auth_decaps_ns,""key_schedule_ns,total_ns,""bytes_total,bytes_client_auth,bytes_server_auth\n");
 }
