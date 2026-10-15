@@ -9,6 +9,9 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include "metrics.h"
+#define WARMUP 3
+#define ITERATIONS 30
+
 
 static void print_hex(const char *label, const uint8_t *buf, size_t len){
     printf("%s: ", label);
@@ -52,8 +55,11 @@ static int run_handshake(const char *auth_kem_name, uint16_t port){
         exit(0);
     }
 
-    sleep(1);
-    int fd = transport_client_connect("127.0.0.1", port);
+    int fd = -1;
+    for(int attempt = 0; attempt < 50 && fd < 0; attempt++;){
+        fd = transport_client_connect("127.0.0.1", port);
+        if(fd < 0) usleep(10000);
+    }
     if(fd < 0){
         waitpid(pid, NULL, 0);
         return 1;
