@@ -19,21 +19,7 @@ static void print_hex(const char *label, const uint8_t *buf, size_t len){
     printf("\n");
 }
 
-static int run_handshake(const char *auth_kem_name, uint16_t port){
-    uint8_t ca_pub[ED25519_PUB_LEN];
-    uint8_t ca_priv[ED25519_PRIV_LEN];
-    if(ca_keygen(ca_pub, ca_priv) != KEM_SUCCESS) return 1;
-    kem_t *auth = kem_open(auth_kem_name);
-    if(auth == NULL) return 1;
-    uint8_t *srv_pk = malloc(kem_pk_len(auth));
-    uint8_t *srv_sk = malloc(kem_sk_len(auth));
-    if(kem_keypair(auth, srv_pk, srv_sk) != KEM_SUCCESS) return 1;
-    uint8_t cred[16384];
-    size_t cred_len;
-    const uint8_t identity[] = "test-server";
-    if(credential_create(identity, 11, srv_pk, kem_pk_len(auth), ca_priv, cred, sizeof(cred), &cred_len) != KEM_SUCCESS) return 1;
-    kem_close(auth);
-
+static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t *ca_pub, const uint8_t *cred, size_t cred_len, const uint8_t *srv_sk, int iteration){
     pid_t pid = fork();
     if(pid < 0) return 1;
     if(pid == 0){
@@ -80,6 +66,23 @@ static int run_handshake(const char *auth_kem_name, uint16_t port){
     free(srv_pk);
     free(srv_sk);
     return ok;
+}
+
+static int run_handshake(const char *auth_kem_name, uint16_t port){
+    uint8_t ca_pub[ED25519_PUB_LEN];
+    uint8_t ca_priv[ED25519_PRIV_LEN];
+    if(ca_keygen(ca_pub, ca_priv) != KEM_SUCCESS) return 1;
+    kem_t *auth = kem_open(auth_kem_name);
+    if(auth == NULL) return 1;
+    uint8_t *srv_pk = malloc(kem_pk_len(auth));
+    uint8_t *srv_sk = malloc(kem_sk_len(auth));
+    if(kem_keypair(auth, srv_pk, srv_sk) != KEM_SUCCESS) return 1;
+    uint8_t cred[16384];
+    size_t cred_len;
+    const uint8_t identity[] = "test-server";
+    if(credential_create(identity, 11, srv_pk, kem_pk_len(auth), ca_priv, cred, sizeof(cred), &cred_len) != KEM_SUCCESS) return 1;
+    kem_close(auth);
+    return 0;
 }
 
 int main(void){
