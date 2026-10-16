@@ -82,6 +82,8 @@ static int run_handshake(const char *auth_kem_name, uint16_t port){
     const uint8_t identity[] = "test-server";
     if(credential_create(identity, 11, srv_pk, kem_pk_len(auth), ca_priv, cred, sizeof(cred), &cred_len) != KEM_SUCCESS) return 1;
     kem_close(auth);
+    free(srv_pk);
+    free(srv_sk);
     return 0;
 }
 
