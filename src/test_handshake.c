@@ -88,7 +88,7 @@ static int run_handshake(const char *auth_kem_name, uint16_t port){
     }
     free(srv_pk);
     free(srv_sk);
-    return 0;
+    return failures;
 }
 
 int main(void){
