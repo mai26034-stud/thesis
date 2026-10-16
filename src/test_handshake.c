@@ -36,7 +36,7 @@ static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t
             transport_close(fd);
             exit(1);
         }
-        metrics_csv_row(stdout, auth_kem_name, "server", 1, &tm, &stats);
+        if(iteration > 0) metrics_csv_row(stdout, auth_kem_name, "server", 1, &tm, &stats);
         transport_close(fd);
         exit(0);
     }
@@ -56,15 +56,15 @@ static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t
     int ok = 0;
     timings_t tm;
     timings_init(&tm);
+    int ok = 0;
     if(handshake_client(fd, auth_kem_name, ca_pub, ms, &stats, &tm) != KEM_SUCCESS){
         printf("  The client unfortunately failed :(\n");
         ok = 1;
+    } else if(iteration > 0){
+        metrics_csv_row(stdout, auth_kem_name, "client", iteration, &tm, &stats);
     }
-    metrics_csv_row(stdout, auth_kem_name, "client", 1, &tm, &stats);
     transport_close(fd);
     waitpid(pid, NULL, 0);
-    free(srv_pk);
-    free(srv_sk);
     return ok;
 }
 
