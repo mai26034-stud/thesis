@@ -36,13 +36,13 @@ static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t
             transport_close(fd);
             exit(1);
         }
-        if(iteration > 0) metrics_csv_row(stdout, auth_kem_name, "server", 1, &tm, &stats);
+        if(iteration > 0) metrics_csv_row(stdout, auth_kem_name, "server", iteration, &tm, &stats);
         transport_close(fd);
         exit(0);
     }
 
     int fd = -1;
-    for(int attempt = 0; attempt < 50 && fd < 0; attempt++;){
+    for(int attempt = 0; attempt < 50 && fd < 0; attempt++){
         fd = transport_client_connect("127.0.0.1", port);
         if(fd < 0) usleep(10000);
     }
@@ -56,7 +56,6 @@ static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t
     int ok = 0;
     timings_t tm;
     timings_init(&tm);
-    int ok = 0;
     if(handshake_client(fd, auth_kem_name, ca_pub, ms, &stats, &tm) != KEM_SUCCESS){
         printf("  The client unfortunately failed :(\n");
         ok = 1;
@@ -82,6 +81,11 @@ static int run_handshake(const char *auth_kem_name, uint16_t port){
     const uint8_t identity[] = "test-server";
     if(credential_create(identity, 11, srv_pk, kem_pk_len(auth), ca_priv, cred, sizeof(cred), &cred_len) != KEM_SUCCESS) return 1;
     kem_close(auth);
+    int failures = 0;
+    for(int i = 0; i <WARMUP + ITERATIONS; i++){
+        int iter = (i < WARMUP)? -1 : (i - WARMUP + 1);
+        if(one_handshake(auth_kem_name, port + i, ca_pub, cred, cred_len, srv_sk, iter) != 0) failures++;
+    }
     free(srv_pk);
     free(srv_sk);
     return 0;
@@ -90,8 +94,8 @@ static int run_handshake(const char *auth_kem_name, uint16_t port){
 int main(void){
     int failures = 0;
     metrics_csv_header(stdout);
-    failures += run_handshake("ML-KEM-768", 19001);
-    failures += run_handshake("HQC-3", 19002);
-    failures += run_handshake("X-Wing", 19003);
+    failures += run_handshake("ML-KEM-768", 19000);
+    failures += run_handshake("HQC-3", 19200);
+    failures += run_handshake("X-Wing", 19400);
     return failures;
 }
