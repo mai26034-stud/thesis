@@ -20,6 +20,7 @@ static void print_hex(const char *label, const uint8_t *buf, size_t len){
 }
 
 static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t *ca_pub, const uint8_t *cred, size_t cred_len, const uint8_t *srv_sk, int iteration){
+    fflush(stdout);
     pid_t pid = fork();
     if(pid < 0) return 1;
     if(pid == 0){
@@ -94,6 +95,7 @@ static int run_handshake(const char *auth_kem_name, uint16_t port){
 int main(void){
     int failures = 0;
     metrics_csv_header(stdout);
+    fflush(stdout);
     failures += run_handshake("ML-KEM-768", 19000);
     failures += run_handshake("HQC-3", 19200);
     failures += run_handshake("X-Wing", 19400);
