@@ -39,6 +39,7 @@ static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t
         }
         if(iteration > 0) metrics_csv_row(stdout, auth_kem_name, "server", iteration, &tm, &stats);
         transport_close(fd);
+        fflush(stdout);
         exit(0);
     }
 
