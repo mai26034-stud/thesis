@@ -8,10 +8,10 @@
 #include <sys/wait.h>
 
 #define WARMUP 3
-#define iterations 30
-#define CA_CERT "/thesis/src/certs/ca-cert.pem"
-#define SRV_CERT "/thesis/src/certs/server-cert.pem"
-#define SRV_KEY "/thesis/src/certs/server-key.pem"
+#define ITERATIONS 30
+#define CA_CERT "~/thesis/certs/ca-cert.pem"
+#define SRV_CERT "~/thesis/certs/server-cert.pem"
+#define SRV_KEY "~/thesis/certs/server-key.pem"
 
 static int one_baseline(uint16_t port, int iteration){
   fflush(stdout);
@@ -41,12 +41,13 @@ static int one_baseline(uint16_t port, int iteration){
   }
   
   int fd = -1;
-  for(int attempt = 0; attempt < 50; && fd < 0; attempt++){
+  for(int attempt = 0; attempt < 50 && fd < 0; attempt++){
       fd = transport_client_connect("127.0.0.1", port);
-      if(fd < 0){
-          waitpid(pid, NULL, 0);
-          return 1;
-      }
+      if(fd < 0) usleep(10000);
+  }
+  if(fd < 0){
+      waitpid(pid, NULL, 0);
+      return 1;
   }
   uint8_t key[32];
   size_t bytes = 0;
@@ -71,7 +72,7 @@ int main(void){
   metrics_csv_header(stdout);
   fflush(stdout);
   for(int i = 0; i < WARMUP + ITERATIONS; i++){
-    int iter = (i < WARMUP) ? -1 : (I - WARMUP + 1);
+    int iter = (i < WARMUP) ? -1 : (i - WARMUP + 1);
     if(one_baseline(19600 + i, iter) != 0) failures++;
   }
   return failures;
