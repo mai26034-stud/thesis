@@ -68,11 +68,11 @@ kem_status_t baseline_server(int fd, const char *cert_path, const char *key_path
 }
 
 kem_status_t baseline_client(int fd, const char *ca_cert_path, uint8_t *key_out, size_t *bytes_out, timings_t *tm){
-    if(cert_path == NULL || key_path == NULL || key_out == NULL || bytes_out == NULL || tm == NULL || fd < 0) return KEM_ERROR;
+    if(ca_cert_path == NULL || key_path == NULL || key_out == NULL || bytes_out == NULL || tm == NULL || fd < 0) return KEM_ERROR;
     wolfSSL_Init();
     WOLFSSL_CTX *ctx = wolfSSL_CTX_new(wolfTLSv1_3_client_method());
     if(ctx == NULL) return KEM_ERROR;
-    if(wolfSSL_CTX_load_verify_locations() != WOLFSSL_SUCCESS){
+    if(wolfSSL_CTX_load_verify_locations(ctx, ca_cert_path, NULL) != WOLFSSL_SUCCESS){
         wolfSSL_CTX_free(ctx);
         return KEM_ERROR;
     }
