@@ -9,9 +9,9 @@
 
 #define WARMUP 3
 #define ITERATIONS 30
-#define CA_CERT "~/thesis/certs/ca-cert.pem"
-#define SRV_CERT "~/thesis/certs/server-cert.pem"
-#define SRV_KEY "~/thesis/certs/server-key.pem"
+#define CA_CERT "../certs/ca-cert.pem"
+#define SRV_CERT "../certs/server-cert.pem"
+#define SRV_KEY "../certs/server-key.pem"
 
 static int one_baseline(uint16_t port, int iteration){
   fflush(stdout);
