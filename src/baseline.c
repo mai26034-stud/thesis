@@ -8,14 +8,15 @@
 
 typedef struct{
     int fd;
-    size_t bytes;
+    size_t bytes_sent;
+    size_t bytes_recv;
 } io_ctx_t;
 
 static int my_send(WOLFSSL *ssl, char *buf, int sz, void *ctx){
     io_ctx_t *io = (io_ctx_t *)ctx;
     (void)ssl;
     int n = (int)send(io->fd, buf, (size_t)sz, 0);
-    if(n > 0) io->bytes += (size_t)n;
+    if(n > 0) io->bytes_sent += (size_t)n;
     return n;
 }
 
@@ -23,7 +24,7 @@ static int my_recv(WOLFSSL *ssl, char *buf, int sz, void *ctx){
     io_ctx_t *io = (io_ctx_t *)ctx;
     (void)ssl;
     int n = (int)recv(io->fd, buf, (size_t)sz, 0);
-    if(n > 0) io->bytes += (size_t)n;
+    if(n > 0) io->bytes_recv += (size_t)n;
     return n;
 }
 
@@ -49,7 +50,8 @@ kem_status_t baseline_server(int fd, const char *cert_path, const char *key_path
     }
     io_ctx_t io;
     io.fd = fd;
-    io.bytes = 0;
+    io.bytes_sent = 0;
+    io.bytes_recv = 0;
     wolfSSL_SetIOWriteCtx(ssl, &io);
     wolfSSL_SetIOReadCtx(ssl, &io);
     uint64_t t0 = metrics_now();
@@ -60,7 +62,7 @@ kem_status_t baseline_server(int fd, const char *cert_path, const char *key_path
         wolfSSL_CTX_free(ctx);
         return KEM_ERROR;
     }
-    *bytes_out = io.bytes;
+    *bytes_out = io.bytes_sent;
     wolfSSL_free(ssl);
     wolfSSL_CTX_free(ctx);
     wolfSSL_Cleanup();
@@ -85,7 +87,8 @@ kem_status_t baseline_client(int fd, const char *ca_cert_path, uint8_t *key_out,
     }
     io_ctx_t io;
     io.fd = fd;
-    io.bytes = 0;
+    io.bytes_sent = 0;
+    io.bytes_recv = 0;
     wolfSSL_SetIOWriteCtx(ssl, &io);
     wolfSSL_SetIOReadCtx(ssl, &io);
     uint64_t t0 = metrics_now();
@@ -96,7 +99,7 @@ kem_status_t baseline_client(int fd, const char *ca_cert_path, uint8_t *key_out,
         wolfSSL_CTX_free(ctx);
         return KEM_ERROR;
     }
-    *bytes_out = io.bytes;
+    *bytes_out = io.bytes_sent;
     wolfSSL_free(ssl);
     wolfSSL_CTX_free(ctx);
     wolfSSL_Cleanup();
