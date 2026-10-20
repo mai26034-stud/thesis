@@ -13,46 +13,57 @@
 #define SRV_CERT "/thesis/src/certs/server-cert.pem"
 #define SRV_KEY "/thesis/src/certs/server-key.pem"
 
-kem_status_t one_baseline(uint16_t port, int iteration){
-  int fd = transport_server_accept(port);
-  if(fd < 0) exit(1);
-  uint8_t key[32];
-  size_t bytes = 0;
-  timings_t tm;
-  timings_init(&tm);
-  if(baseline_server(fd, SRV_CERT, SRV_KEY, key, &bytes, &tm) != KEM_SUCCESS){
-    transport_close(fd);
-    exit(1);
-  }
-  if(iteration > 0){
-    wire_stats_t st;
-    wire_stats_init(&st);
-    st.total_bytes = bytes;
-    metrics_csv_row(stdout, "baseline", "server", iteration, &tm, &st);
-  }
-  transport_close(fd);
+static int one_baseline(uint16_t port, int iteration){
   fflush(stdout);
-  exit(0);
+  pid_t pid = fork();
+  if(pid < 0) return 1;
 
-  fd = transport_server_accept(port);
-  if(fd < 0) exit(1);
+  if(pid == 0){
+      int fd = transport_server_accept(port);
+      if(fd < 0) exit(1);
+      uint8_t key[32];
+      size_t bytes = 0;
+      timings_t tm;
+      timings_init(&tm);
+      if(baseline_server(fd, SRV_CERT, SRV_KEY, key, &bytes, &tm) != KEM_SUCCESS){
+          transport_close(fd);
+          exit(1);
+      }
+      if(iteration > 0){
+          wire_stats_t st;
+          wire_stats_init(&st);
+          st.total_bytes = bytes;
+          metrics_csv_row(stdout, "baseline", "server", iteration, &tm, &st);
+      }
+      transport_close(fd);
+      fflush(stdout);
+      exit(0);
+  }
+  
+  int fd = -1;
+  for(int attempt = 0; attempt < 50; && fd < 0; attempt++){
+      fd = transport_client_connect("127.0.0.1", port);
+      if(fd < 0){
+          waitpid(pid, NULL, 0);
+          return 1;
+      }
+  }
   uint8_t key[32];
   size_t bytes = 0;
   timings_t tm;
   timings_init(&tm);
+  int ok = 0;
   if(baseline_client(fd, CA_CERT, key, &bytes, &tm) != KEM_SUCCESS){
-    transport_close(fd);
-    exit(1);
-  }
-  if(iteration > 0){
+    ok = 1;
+  }else if(iteration > 0){
     wire_stats_t st;
     wire_stats_init(&st);
     st.total_bytes = bytes;
     metrics_csv_row(stdout, "baseline", "client", iteration, &tm, &st);
   }
   transport_close(fd);
-  fflush(stdout);
-  exit(0);
+  waitpid(pid, NULL, 0);
+  return ok;
 }
 
 int main(void){
