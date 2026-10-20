@@ -23,7 +23,7 @@ test_handshake: test_handshake.c $(CORE)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
 
 test_baseline: test_baseline.c baseline.c transport.c wire.c metrics.c
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) -lwolfssl -lcrypto
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) -lwolfssl -lcrypto -lm
 
 clean:
 	rm -f test_kem test_ks test_wire test_transport test_handshake test_baseline *.o
