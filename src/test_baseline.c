@@ -40,7 +40,7 @@ kem_status_t one_baseline(uint16_t port, int iteration){
   size_t bytes = 0;
   timings_t tm;
   timings_init(&tm);
-  if(baseline_server(fd, SRV_CERT, SRV_KEY, key, &bytes, &tm) != KEM_SUCCESS){
+  if(baseline_client(fd, CA_CERT, key, &bytes, &tm) != KEM_SUCCESS){
     transport_close(fd);
     exit(1);
   }
@@ -48,7 +48,7 @@ kem_status_t one_baseline(uint16_t port, int iteration){
     wire_stats_t st;
     wire_stats_init(&st);
     st.total_bytes = bytes;
-    metrics_csv_row(stdout, "baseline", "server", iteration, &tm, &st);
+    metrics_csv_row(stdout, "baseline", "client", iteration, &tm, &st);
   }
   transport_close(fd);
   fflush(stdout);
