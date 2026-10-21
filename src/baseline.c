@@ -104,13 +104,13 @@ kem_status_t baseline_client(int fd, const char *ca_cert_path, uint8_t *key_out,
         if(diag_prints == 0){
             const char *c1 = wolfSSL_get_cipher_name(ssl);
             const char *c2 = wolfSSL_get_curve_name(ssl);
-            fprintf(stderr, "DIAG cipher=%s curve=%s\n", c1, ? c1 : "(null)", c2 ? c2 : "(null)");
+            fprintf(stderr, "DIAG cipher=%s curve=%s\n", c1 ? c1 : "(null)", c2 ? c2 : "(null)");
             char printin_mat[4096];
             int i = wolfSSL_get_ciphers(printin_mat, sizeof(printin_mat));
             if(i == WOLFSSL_SUCCESS){
-                fprintf(stderr, "DIAG cipher=%s\n", printin_mat);
+                fprintf(stderr, "DIAG supported=%s\n", printin_mat);
             }else{
-                printf("%d", i);
+                fprintf(stderr, "DIAG get_ciphers ret=%d\n", i);
             }
             diag_prints = 1;
         }
