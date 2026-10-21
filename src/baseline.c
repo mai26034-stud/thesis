@@ -95,6 +95,19 @@ kem_status_t baseline_client(int fd, const char *ca_cert_path, uint8_t *key_out,
     int ret = wolfSSL_connect(ssl);
     tm->total_ns = metrics_now() - t0;
     if(ret != WOLFSSL_SUCCESS){
+        static int diag_prints = 0;
+        if(diag_prints == 0){
+            const char *c1 = wolfSSL_get_cipher_name(ssl);
+            const char *c2 = wolfSSL_get_curve_name(ssl);
+            fprintf(stdder, );
+            char printin_mat[4096];
+            int i = wolfSSL_get_ciphers(buf, sizeof(buf));
+            if(i == WOLFSSL_SUCCESS){
+                
+            }else{
+                printf(printin_mat);
+            }
+        }
         wolfSSL_free(ssl);
         wolfSSL_CTX_free(ctx);
         return KEM_ERROR;
