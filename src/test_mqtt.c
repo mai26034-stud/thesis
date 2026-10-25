@@ -17,11 +17,43 @@ static int check(const char *name, const uint8_t *got, size_t got_n, const uint8
     return 0;
 }
 
+static int expect_fail(const char *name, kem_status_t r){
+    if(r == KEM_SUCCESS){
+        printf("FAILURE %s\n", name);
+        return 1;
+    }else{
+        printf("ALL IS FINE AND GOOD WITH %s :)\n", name);
+        return 0;
+    }
+}
+
 int main(void){
     int failures = 0;
     uint8_t expected[] = {0x10,0x10,0x00,0x04,0x4D,0x51,0x54,0x54,0x04,0x02,0x00,0x3C,0x00,0x04,0x44,0x30,0x30,0x31};
     size_t written;
     uint8_t buf[64];
+    uint8_t out4[4];
+    size_t n4;
+    struct rl_case cases[] = {{0,         {0x00},                   1},
+                         {127,       {0x7F},                   1},
+                         {128,       {0x80, 0x01},             2},
+                         {16383,     {0xFF, 0x7F} ,            2},
+                         {16384,      {0x80, 0x80, 0x01},      3},
+                         {268435455, {0xFF, 0xFF, 0xFF, 0x7F}, 4}};
+
+    for(size_t i = 0; i < sizeof(cases)/sizeof(cases[0]); i++){
+        uint8_t out[4];
+        size_t n;
+        char name[32];
+        snprintf(name, sizeof(name), "RL %zu", cases[i].len);
+        kem_status_t r = mqtt_encode_remaining_length(cases[i].len, out, sizeof(out), &n);
+        if(r != KEM_SUCCESS){
+            printf("Proccess %s unfortunately failed :(\n", name);
+            failures++;
+        }else{
+            failures += check(name, out, n, cases[i].exp, cases[i].n);
+        }
+    }
     kem_status_t ret = mqtt_build_connect("D001", 60, buf, sizeof(buf), &written);
     if(ret != KEM_SUCCESS){
         printf("BUILDING WAS UNSUCCESSFUL :(\n");
@@ -29,6 +61,10 @@ int main(void){
     }else{
         failures += check("CONNECT D001", buf, written, expected, sizeof(expected));
     }
+    failures += expect_fail("RL over max", mqtt_encode_remaining_length(268435456, out4, sizeof(out4), &n4));
+    failures += expect_fail("CONNECT empty id", mqtt_build_connect("", 60, buf, sizeof(buf), &written));
+    failures += expect_fail("CONNECT id 24 chars", mqtt_build_connect("ABCDEFGHIJKLMNOPQRSTUVWX", 60, buf, sizeof(buf), &written));
+    failures += expect_fail("CONNECT cap 17", mqtt_build_connect("D001", 60, buf, 17, &written));
     printf("%d failures occured\n", failures);
     return failures;
 }
