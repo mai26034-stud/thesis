@@ -3,11 +3,10 @@ smoke/smoke
 *.o
 src/test_kem
 src/test_ks
-src/test_kem
-*.o
 src/test_wire
 src/test_transport
 src/test_handshake
+src/test_baseline
 src/results.csv
 src/baseline.csv
-src/baseline.csv
+src/sslkeylog.log
