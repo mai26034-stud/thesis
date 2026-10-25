@@ -32,7 +32,7 @@ Randomness: getentropy() of the OS (no OpenSSL RNG).
   --enable-static --disable-shared \
   --enable-curve25519 --enable-ed25519 --enable-mlkem \
   --enable-sha3 --enable-hkdf --enable-aesgcm \
-  --enable-chacha --enable-poly1305 --enable-keylog-export \
+  --enable-chacha --enable-poly1305 \
   CFLAGS=-DWOLFSSL_PUBLIC_MP
 Note: with --enable-mlkem, TLS 1.3 negotiates X25519MLKEM768 by default.
 The baseline therefore pins in code (baseline.c, both sides):
@@ -44,3 +44,4 @@ The baseline therefore pins in code (baseline.c, both sides):
 - 2026-10-24, baseline after pinning: TLS13-AES128-GCM-SHA256 / X25519
 - 2026-10-24, LIBOQS: OQS_USE_OPENSSL, OQS_USE_SHA2_OPENSSL, OQS_USE_AES_OPENSSL, OQS_USE_SHA3_OPENSSL all undef in oqsconfig.h. All tests pass without -lcrypto.
 - Measurements taken before 2026-10-24 are invalid (baseline used X25519MLKEM768; liboqs used OpenSSL).
+- 2026-10-25, wolfSSL rebuilt without --enable-keylog-export (key log file was written inside the timed handshake).Baseline median total: 1.42ms -> 1.20 ms.
