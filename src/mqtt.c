@@ -87,8 +87,8 @@ kem_status_t mqtt_build_publish(const char *topic, const uint8_t *payload, size_
 
 kem_status_t mqtt_build_disconnect(uint8_t *buf, size_t cap, size_t *written){
     if(buf == NULL || written == NULL || cap < 2) return KEM_ERROR;
-    buf[pos++] = 0xE0;
-    buf[pos++] = 0x00;
+    buf[0] = 0xE0;
+    buf[1] = 0x00;
     *written = 2;
     return KEM_SUCCESS;
 }
@@ -96,7 +96,7 @@ kem_status_t mqtt_build_disconnect(uint8_t *buf, size_t cap, size_t *written){
 kem_status_t mqtt_parse_connack(const uint8_t *buf, size_t len, uint8_t *return_code){
     if(buf == NULL || return_code == NULL || len < 4) return KEM_ERROR;
     if(buf[0] != 0x20 || buf[1] != 0x02) return KEM_ERROR;
-    *return+code = buf[3];
+    *return_code = buf[3];
     return KEM_SUCCESS;
 }
 
