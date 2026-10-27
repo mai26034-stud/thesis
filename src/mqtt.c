@@ -69,11 +69,12 @@ kem_status_t mqtt_build_publish(const char *topic, const uint8_t *payload, size_
   buf[pos++] = (uint8_t)(0x30 | (qos << 1));
   memcpy(buf + pos, t, rl_n);
   pos += rl_n;
+  buf[pos++] = (uint8_t)(tl >> 8);
   buf[pos++] = (uint8_t)(tl & 0xFF);
   memcpy(buf + pos, topic, tl);
   pos += tl;
   if(qos == 1){
-    buf[pos++] = (uint8_t)(0x30 | (packet_id >> 8));
+    buf[pos++] = (uint8_t)(packet_id >> 8);
     buf[pos++] = (uint8_t)(packet_id & 0xFF);
   }
   if(payload_len > 0){
