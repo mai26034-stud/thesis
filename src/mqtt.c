@@ -52,7 +52,7 @@ kem_status_t mqtt_build_connect(const char *client_id, uint16_t keepalive, uint8
 kem_status_t mqtt_build_publish(const char *topic, const uint8_t *payload, size_t payload_len, uint8_t qos, uint16_t packet_id, uint8_t *buf, size_t cap, size_t *written){
   if(topic == NULL || buf == NULL || written == NULL) return KEM_ERROR;
   if(payload == NULL && payload_len > 0) return KEM_ERROR;
-  size_t tl = strlen(topic)
+  size_t tl = strlen(topic);
   if(tl < 1 || tl > 65535) return KEM_ERROR;
   if(strchr(topic, '+') != NULL || strchr(topic, '#') != NULL) return KEM_ERROR;
   if(qos != 0 && qos != 1) return KEM_ERROR;
@@ -67,13 +67,20 @@ kem_status_t mqtt_build_publish(const char *topic, const uint8_t *payload, size_
   if(total > cap) return KEM_ERROR;
   size_t pos = 0;
   buf[pos++] = (uint8_t)(0x30 | (qos << 1));
+  buf[pos++] = (uint8_t)(tl & 0xFF);
   memcpy(buf + pos, t, rl_n);
   pos += rl_n;
-  tl = (>> 8, & 0xFF);
-  memcpy(topic, t, tl);
-  memcpy(buf + pos, client_id, l);
-  pos += l;
-
+  memcpy(buf + pos, topic, tl);
+  pos += tl;
+  if(qos == 1){
+    buf[pos++] = (uint8_t)(0x30 | (qos << 1));
+    buf[pos++] = (uint8_t)(packet_id & 0xFF);
+  }
+  if(payload_len > 0){
+    buf[pos++] = (uint8_t)(0x30 | (qos << 1));
+    buf[pos++] = (uint8_t)(tl & 0xFF);
+    pos += payload_len;
+  }
   *written = pos;
   return KEM_SUCCESS;
 }
