@@ -67,6 +67,23 @@ kem_status_t mqtt_build_publish(const char *topic, const uint8_t *payload, size_
   size_t total = 1 + rl_n + rem_len;
   if(total > cap) return KEM_ERROR;
   size_t pos = 0;
+  buf[pos++] = 0x10;
+  memcpy(buf + pos, t, rl_n);
+  pos += rl_n;
+  buf[pos++] = 0x00;
+  buf[pos++] = 0x04;
+  buf[pos++] = 'M';
+  buf[pos++] = 'Q';
+  buf[pos++] = 'T';
+  buf[pos++] = 'T';
+  buf[pos++] = 0x04;
+  buf[pos++] = 0x02;
+  buf[pos++] = (uint8_t)(keepalive >> 8);
+  buf[pos++] = (uint8_t)(keepalive & 0xFF);
+  buf[pos++] = (uint8_t)(l >> 8);
+  buf[pos++] = (uint8_t)(l & 0xFF);
+  memcpy(buf + pos, client_id, l);
+  pos += l;
 
   *written = pos;
   return KEM_SUCCESS;
