@@ -71,6 +71,27 @@ int main(void){
     }else{
         failures += check("CONNECT D001", buf, written, expected, sizeof(expected));
     }
+    ret = mqtt_build_publish("a/b", hi, sizeof(hi), 0, 0, buf, sizeof(buf), &written);
+    if(ret != KEM_SUCCESS){
+        printf("PUBLISHING WAS UNSUCCESSFUL :(\n");
+        failures++;
+    }else{
+        failures += check("PUBLISH qos0", buf, written, exp_pub0, sizeof(exp_pub0));
+    }
+    ret = mqtt_build_publish("a/b", hi, sizeof(hi), 1, 10, buf, sizeof(buf), &written);
+    if(ret != KEM_SUCCESS){
+        printf("2nd PUBLISHING WAS UNSUCCESSFUL :(\n");
+        failures++;
+    }else{
+        failures += check("PUBLISH qos1", buf, written, exp_pub1, sizeof(exp_pub1));
+    }
+    ret = mqtt_build_disconnect(buf, sizeof(buf), &written);
+    if(ret != KEM_SUCCESS){
+        printf("DISCONNECTING WAS UNSUCCESSFUL :(\n");
+        failures++;
+    }else{
+        failures += check("DISCONNECT", buf, written, exp_disc, sizeof(exp_disc));
+    }
     failures += expect_fail("RL over max", mqtt_encode_remaining_length(268435456, out4, sizeof(out4), &n4));
     failures += expect_fail("CONNECT empty id", mqtt_build_connect("", 60, buf, sizeof(buf), &written));
     failures += expect_fail("CONNECT id 24 chars", mqtt_build_connect("ABCDEFGHIJKLMNOPQRSTUVWX", 60, buf, sizeof(buf), &written));
