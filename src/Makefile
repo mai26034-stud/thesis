@@ -5,7 +5,7 @@ LIBS = -lwolfssl -loqs
 
 CORE = kem.c kem_oqs.c kem_x25519.c kem_hybrid.c transcript.c keyschedule.c wire.c metrics.c credential.c transport.c handshake.c
 
-all: test_kem test_ks test_wire test_transport test_handshake test_baseline test_mqtt
+all: test_kem test_ks test_wire test_transport test_handshake test_baseline test_mqtt mqtt_smoke
 
 test_kem: test_kem.c kem.c kem_oqs.c kem_x25519.c kem_hybrid.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
@@ -28,7 +28,10 @@ test_baseline: test_baseline.c baseline.c transport.c wire.c metrics.c
 test_mqtt: test_mqtt.c mqtt.c
 	$(CC) $(CFLAGS) $^ -o $@
 
+mqtt_smoke: mqtt_smoke.c mqtt.c transport.c
+	$(CC) $(CFLAGS) $^ -o $@
+
 clean:
-	rm -f test_kem test_ks test_wire test_transport test_handshake test_baseline test_mqtt *.o
+	rm -f test_kem test_ks test_wire test_transport test_handshake test_baseline test_mqtt mqtt_smoke *.o
 
 .PHONY: all clean

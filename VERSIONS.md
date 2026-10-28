@@ -2,6 +2,7 @@
 
 liboqs: 0.16.0
 wolfSSL: v5.9.2-stable
+Mosquitto: 2.0.18 (Ubuntu 24.04 package), default config (localhost only)
 Compiler: gcc 13.3.0
 Build flags: -Wall -O2 (Makefile)
 
