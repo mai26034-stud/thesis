@@ -46,3 +46,5 @@ The baseline therefore pins in code (baseline.c, both sides):
 - 2026-10-24, LIBOQS: OQS_USE_OPENSSL, OQS_USE_SHA2_OPENSSL, OQS_USE_AES_OPENSSL, OQS_USE_SHA3_OPENSSL all undef in oqsconfig.h. All tests pass without -lcrypto.
 - Measurements taken before 2026-10-24 are invalid (baseline used X25519MLKEM768; liboqs used OpenSSL).
 - 2026-10-25, wolfSSL rebuilt without --enable-keylog-export (key log file was written inside the timed handshake).Baseline median total: 1.42ms -> 1.20 ms.
+- 2026-10-31, X25519 shared secret switched o little-endian (RFC 7748); validated against RFC 7748 §6.1 test vector in both directions (test_kem).
+- 2026-10-31, X-Wing combiner checked against Barbosa et al. 2024 (IACR CiC 1(1), definition 8): label first, KeyGen without seed - in agreement with kem_hybrid.c. Later IETF drafts (-05+) move the label last and use seed keys; that was not integrated, since these would not be in accordance with what was stated to be done in this project).
