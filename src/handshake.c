@@ -27,7 +27,6 @@ static kem_status_t recv_message(int fd, uint8_t *buf, size_t buf_cap, uint8_t *
 
 kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *ca_pub, uint8_t *main_secret_out, wire_stats_t *stats, timings_t *tm){
     if(tm == NULL) return KEM_ERROR;
-    uint64_t t_start = metrics_now();
     uint64_t t0;
     kem_t *eph = kem_open(EPHEMERAL_KEM);
     if(eph == NULL) return KEM_ERROR;
@@ -51,26 +50,28 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     transcript_t tr;
     transcript_init(&tr);
     size_t written;
+    uint64_t t_start = metrics_now();
     t0 = metrics_now();
     kem_status_t t = kem_keypair(eph, eph_pk, eph_sk);
     tm->eph_keypair_ns = metrics_now() - t0;
     if(t != KEM_SUCCESS) return KEM_ERROR;
     t = wire_write(WIRE_CLIENT_HELLO, eph_pk, kem_pk_len(eph), msgbuf, sizeof(msgbuf), &written, stats);
     if(t != KEM_SUCCESS) return KEM_ERROR;
-    transport_send(fd, msgbuf, written);
-    transcript_append(&tr, msgbuf, written);
+    if(transport_send(fd, msgbuf, written) != KEM_SUCCESS) return KEM_ERROR;
+    if(transcript_append(&tr, msgbuf, written) != KEM_SUCCESS) return KEM_ERROR;
     t = recv_message(fd, msgbuf, sizeof(msgbuf), &type, &content, &content_len, &total);
     if(t != KEM_SUCCESS) return KEM_ERROR;
     if(type != WIRE_SERVER_HELLO){
         printf("FAIL: client: wrong type %d\n", type);
         return KEM_ERROR;
     }
-    transcript_append(&tr, msgbuf, total);
+    if(transcript_append(&tr, msgbuf, total) != KEM_SUCCESS) return KEM_ERROR;
     t0 = metrics_now();
     t = kem_decaps(eph, eph_sk, content, ss_eph);
     tm->eph_decaps_ns = metrics_now() - t0;
     if(t != KEM_SUCCESS) return KEM_ERROR;
     t = recv_message(fd, msgbuf, sizeof(msgbuf), &type, &content, &content_len, &total);
+    if(t != KEM_SUCCESS) return KEM_ERROR;
     if(type != WIRE_SERVER_AUTH) return KEM_ERROR;
     const uint8_t *server_auth_pk;
     size_t server_auth_pk_len;
@@ -79,7 +80,9 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     t = credential_verify(content, content_len, ca_pub, &server_auth_pk, &server_auth_pk_len);
     tm->cred_verify_ns = metrics_now() - t0;
     if(t != KEM_SUCCESS) return KEM_ERROR;
+    if(server_auth_pk_len != kem_pk_len(auth)) return KEM_ERROR;
     uint8_t *auth_ct = malloc(kem_ct_len(auth));
+    if(auth_ct == NULL) return KEM_ERROR;
     t0 = metrics_now();
     t = kem_encaps(auth, server_auth_pk, auth_ct, ss_auth);
     tm->auth_encaps_ns = metrics_now() - t0;
@@ -90,6 +93,7 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     if(transcript_append(&tr, msgbuf, written) != KEM_SUCCESS) return KEM_ERROR;
     t0 = metrics_now();
     t = derive_handshake_secrets(ss_eph, 32, ss_auth, 32, main_secret_out);
+    tm->total_ns = metrics_now() - t_start;
     tm->key_schedule_ns = metrics_now() - t0;
     if(t != KEM_SUCCESS) return KEM_ERROR;
     wc_ForceZero(ss_eph, 32);
@@ -100,13 +104,11 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     free(auth_ct);
     free(eph_pk);
     free(eph_sk);
-    tm->total_ns = metrics_now() - t_start;
     return KEM_SUCCESS;
 }
 
 kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *cred, size_t cred_len, const uint8_t *auth_sk, uint8_t *main_secret_out, wire_stats_t *stats, timings_t *tm){
     if(tm == NULL) return KEM_ERROR;
-    uint64_t t_start = metrics_now();
     uint64_t t0;
     kem_t *eph = kem_open(EPHEMERAL_KEM);
     if(eph == NULL) return KEM_ERROR;
@@ -127,6 +129,7 @@ kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *
     size_t content_len, total, written;
     transcript_t tr;
     transcript_init(&tr);
+    uint64_t t_start = metrics_now();
     kem_status_t t;
     t = recv_message(fd, msgbuf, sizeof(msgbuf), &type, &content, &content_len, &total);
     if(t != KEM_SUCCESS) return KEM_ERROR;
@@ -154,6 +157,7 @@ kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *
     if(t != KEM_SUCCESS) return KEM_ERROR;
     t0 = metrics_now();
     t = derive_handshake_secrets(ss_eph, 32, ss_auth, 32, main_secret_out);
+    tm->total_ns = metrics_now() - t_start;
     tm->key_schedule_ns = metrics_now() - t0;
     if(t != KEM_SUCCESS) return KEM_ERROR;
     wc_ForceZero(ss_auth, 32);
@@ -161,6 +165,5 @@ kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *
     kem_close(eph);
     kem_close(auth);
     free(eph_ct);
-    tm->total_ns = metrics_now() - t_start;
     return KEM_SUCCESS;
 }

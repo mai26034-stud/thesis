@@ -103,7 +103,7 @@ static kem_status_t x25519_encaps(const kem_t *k, const uint8_t *pk, uint8_t *ct
         return KEM_ERROR;
     }
     word32 ss_len = 32;
-    ret = wc_curve25519_shared_secret(&eph, &peer, ss, &ss_len);
+    ret = wc_curve25519_shared_secret_ex(&eph, &peer, ss, &ss_len, EC25519_LITTLE_ENDIAN);
     if(ret != 0){
         wc_curve25519_free(&eph);
         wc_curve25519_free(&peer);
@@ -139,7 +139,7 @@ static kem_status_t x25519_decaps(const kem_t *k, const uint8_t *sk, const uint8
         return KEM_ERROR;
     }
     word32 ss_len = 32;
-    ret = wc_curve25519_shared_secret(&mine, &peer, ss, &ss_len);
+    ret = wc_curve25519_shared_secret_ex(&mine, &peer, ss, &ss_len, EC25519_LITTLE_ENDIAN);
     if(ret != 0){
         wc_curve25519_free(&mine);
         wc_curve25519_free(&peer);
