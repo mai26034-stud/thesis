@@ -9,8 +9,9 @@
 #include <stdint.h>
 
 static const char TLS13_PREFIX[6] = {'t', 'l', 's', '1', '3', ' '};
-static kem_status_t hkdf_expand_label(const uint8_t *secret, size_t secret_len, const char *label, const uint8_t *context, size_t context_len, uint8_t *out, size_t out_len){
-     uint8_t hkdf_label[512];
+kem_status_t ks_expand_label(const uint8_t *secret, const char *label, const uint8_t *context, size_t context_len, uint8_t *out, size_t out_len){
+     if(secret == NULL || label == NULL || out == NULL || ctx == NULL || context_len > 0 || (6 + strlen(label)) <= 255) return KEM_ERROR;
+     uint8_t hkdf_label[514];
      size_t pos = 0;
 
      hkdf_label[pos++] = (uint8_t)(out_len >> 8);
@@ -54,7 +55,7 @@ static kem_status_t derive_secret(const uint8_t *secret, size_t secret_len, cons
      int ret = transcript_hash(msgs, msgs_len, ctx_hash);
      if(ret != 0) return KEM_ERROR;
 
-     ret = hkdf_expand_label(secret, secret_len, label, ctx_hash, 32, out, 32);
+     ret = ks_expand_label(secret, label, ctx_hash, 32, out, 32);
      if(ret != 0) return KEM_ERROR;
      return KEM_SUCCESS;
 }
