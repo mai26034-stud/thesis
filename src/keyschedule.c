@@ -57,19 +57,9 @@ static kem_status_t empty_hash(uint8_t *out){
      return transcript_hash(empty, 0, out);
 }
 
-static kem_status_t derive_secret(const uint8_t *secret, size_t secret_len, const char *label, const uint8_t *msgs, size_t msgs_len, uint8_t *out){
-     uint8_t ctx_hash[32];
-     int ret = transcript_hash(msgs, msgs_len, ctx_hash);
-     if(ret != 0) return KEM_ERROR;
-
-     ret = ks_expand_label(secret, label, ctx_hash, 32, out, 32);
-     if(ret != 0) return KEM_ERROR;
-     return KEM_SUCCESS;
-}
-
 kem_status_t derive_handshake_secrets(const uint8_t *ss_ephemeral, size_t ss_eph_len, const uint8_t *ss_auth, size_t ss_auth_len, uint8_t *main_secret_out){
      ks_state_t st;
-     kem_status_r r = ks_stage_handshake(&st, ss_ephemeral, ss_eph_len);
+     kem_status_t r = ks_stage_handshake(&st, ss_ephemeral, ss_eph_len);
      if(r != KEM_SUCCESS){
           ks_state_clear(&st);
           return KEM_ERROR;
@@ -79,47 +69,9 @@ kem_status_t derive_handshake_secrets(const uint8_t *ss_ephemeral, size_t ss_eph
           ks_state_clear(&st);
           return KEM_ERROR;
      }
-     if(memcpy(main_secret_out, st.ms, 32) != 0){
-          ks_state_clear(&st);
-          return KEM_ERROR;
-     }
+     memcpy(main_secret_out, st.ms, 32)
      ks_state_clear(&st);
-     return KEM_SUCCESS
-     /*uint8_t zeros[32] = {0};
-     uint8_t empty[1] = {0};
-     uint8_t early_secret[32];
-     uint8_t dES[32];
-     uint8_t handshake_secret[32];
-     uint8_t dHS[32];
-     uint8_t auth_handshake_secret[32];
-     uint8_t dAHS[32];
-     int ret = wc_HKDF_Extract(WC_SHA256, zeros, 32, zeros, 32, early_secret);
-     if(ret != 0) return KEM_ERROR;
-
-     ret = derive_secret(early_secret, 32, "derived", empty, 0, dES);
-     if(ret != 0) return KEM_ERROR;
-
-     ret = wc_HKDF_Extract(WC_SHA256, dES, 32, ss_ephemeral, ss_eph_len, handshake_secret);
-     if(ret != 0) return KEM_ERROR;
-
-     ret = derive_secret(handshake_secret, 32, "derived", empty, 0, dHS);
-     if(ret != 0) return KEM_ERROR;
-
-     ret = wc_HKDF_Extract(WC_SHA256, dHS, 32, ss_auth, ss_auth_len, auth_handshake_secret);
-     if(ret != 0) return KEM_ERROR;
-
-     ret = derive_secret(auth_handshake_secret, 32, "derived", empty, 0, dAHS);
-     if(ret != 0) return KEM_ERROR;
-
-     ret = wc_HKDF_Extract(WC_SHA256, dAHS, 32, zeros, 32, main_secret_out);
-     if(ret != 0) return KEM_ERROR;
-     wc_ForceZero(early_secret, 32);
-     wc_ForceZero(dES, 32);
-     wc_ForceZero(handshake_secret, 32);
-     wc_ForceZero(dHS, 32);
-     wc_ForceZero(auth_handshake_secret, 32);
-     wc_ForceZero(dAHS, 32);
-     return KEM_SUCCESS;*/
+     return KEM_SUCCESS;
 }
 
 kem_status_t ks_extract(const uint8_t *salt, size_t salt_len, const uint8_t *ikm, size_t ikm_len, uint8_t *out){
