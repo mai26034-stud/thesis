@@ -106,3 +106,16 @@ kem_status_t ks_extract(const uint8_t *salt, size_t salt_len, const uint8_t *ikm
      if(r != KEM_SUCCESS) return KEM_ERROR;
      return KEM_SUCCESS;
 }
+
+kem_status_t ks_derive_secret(const uint8_t *secret, const char *label, const uint8_t *th, uint8_t *out){
+     if(th == NULL) return KEM_ERROR;
+     return ks_expand_label(secret, label, th, 32, out, 32);
+}
+
+kem_status_t ks_traffic_keys(const uint8_t *traffic_secret, uint8_t *key, uint8_t *iv){
+     if(traffic_secret == NULL || key == NULL || iv == NULL) return KEM_ERROR;
+     kem_status_t r = ks_expand_label(traffic_secret, "key", NULL, 0, key, 16);
+     if(r != KEM_SUCCESS) return KEM_ERROR;
+     r = ks_expand_label(traffic_secret, "iv", NULL, 0, iv, 12);
+     if(r != KEM_SUCCESS) return KEM_ERROR;
+}
