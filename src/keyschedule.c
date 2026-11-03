@@ -120,3 +120,16 @@ kem_status_t ks_traffic_keys(const uint8_t *traffic_secret, uint8_t *key, uint8_
      if(r != KEM_SUCCESS) return KEM_ERROR;
      return KEM_SUCCESS;
 }
+
+kem_status_t ks_stage_handshake(ks_state_t *st, const uint8_t *ss_eph, size_t ss_eph_len){
+     if(st == NULL || ss_eph == NULL) return KEM_ERROR;
+     kem_status_t es = ks_extract(zeros, 32, zeros, 32);
+     if(es != KEM_SUCCESS) return KEM_ERROR;
+     uint8_t th0 = empty_hash();
+     kem_status_t des = ks_derive_secret(es, "derived", th0);
+     if(des != KEM_SUCCESS) return KEM_ERROR;
+     st->hs = ks_extract(des, 32, ss_eph, ss_eph_len);
+     wc_ForceZero(es);
+     wc_ForceZero(des);
+     return KEM_SUCCESS;
+}
