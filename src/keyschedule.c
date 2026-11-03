@@ -10,7 +10,9 @@
 
 static const char TLS13_PREFIX[6] = {'t', 'l', 's', '1', '3', ' '};
 kem_status_t ks_expand_label(const uint8_t *secret, const char *label, const uint8_t *context, size_t context_len, uint8_t *out, size_t out_len){
-     if(secret == NULL || label == NULL || out == NULL || ctx == NULL || context_len > 0 || (6 + strlen(label)) <= 255) return KEM_ERROR;
+     if(secret == NULL || label == NULL || out == NULL) return KEM_ERROR;
+     if(context == NULL && context_len > 0) return KEM_ERROR;
+     if(6 + strlen(label)) > 255 || context_len > 255) return KEM_ERROR;
      uint8_t hkdf_label[514];
      size_t pos = 0;
 
@@ -32,7 +34,7 @@ kem_status_t ks_expand_label(const uint8_t *secret, const char *label, const uin
           pos += context_len;
      }
 
-     int ret = wc_HKDF_Expand(WC_SHA256, secret, (word32)secret_len, hkdf_label, (word32)pos, out, (word32)out_len); //να το ξαναδώ και επίσης ότι το WC_SHA256 είναι το σωστό όνομα
+     int ret = wc_HKDF_Expand(WC_SHA256, secret, 32, hkdf_label, (word32)pos, out, (word32)out_len);
      if(ret != 0) return KEM_ERROR;
      return KEM_SUCCESS;
 }
@@ -96,4 +98,11 @@ kem_status_t derive_handshake_secrets(const uint8_t *ss_ephemeral, size_t ss_eph
      wc_ForceZero(auth_handshake_secret, 32);
      wc_ForceZero(dAHS, 32);
      return KEM_SUCCESS;  // Εκκρεμεί να ελεγχθεί ότι το WC_SHA256 είναι το σωστό όνομα μεταβλητής, ότι υπάρχουν τα wc_HKDF_Extract και wc_HKDF_Expand αλλιώς να τα ενεργοποιήσω, ότι η υπογραφή το wc_HKDF_Extract έχει την σωστή σειρά εισόδων και ότι το wc_InitSha256 παίρνει heap/devId εισόδους όπως το έχω.
+}
+
+kem_status_t ks_extract(const uint8_t *salt, size_t salt_len, const uint8_t *ikm, size_t ikm_len, uint8_t *out){
+     if(ikm == NULL || out == NULL) return KEM_ERROR;
+     int r = wc_HKDF_Extract(WC_SHA256, salt, (word32)salt_len, ikm, (word32)ikm_len, out);
+     if(r != KEM_SUCCESS) return KEM_ERROR;
+     return KEM_SUCCESS;
 }
