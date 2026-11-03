@@ -144,11 +144,16 @@ kem_status_t ks_stage_handshake(ks_state_t *st, const uint8_t *ss_eph, size_t ss
 
 kem_status_t ks_stage_auth(ks_state_t *st, const uint8_t *ss_auth, size_t ss_auth_len){
      if(st == NULL || ss_auth == NULL) return KEM_ERROR;
-     kem_status_t dhs = ks_derive_secret(st->hs, "derived", th0);
-     if(dhs != KEM_SUCCESS) return KEM_ERROR;
-     st->ahs = ks_extract(dhs, 32, ss_auth, ss_auth_len);
-     dahs = ks_derive_secret(st->ahs, "derived", th0);
-     st->ms = ks_extract(dahs, 32, zeros, 32);
+     uint8_t zeros[32] = {0};
+     uint8_t dhs[32], th0[32], dahs[32];
+     kem_status_t r = ks_derive_secret(st->hs, "derived", th0, dhs);
+     if(r != KEM_SUCCESS) return KEM_ERROR;
+     r = ks_extract(dhs, 32, ss_auth, ss_auth_len, st->ahs);
+     if(r != KEM_SUCCESS) return KEM_ERROR;
+     r = ks_derive_secret(st->ahs, "derived", th0, dahs);
+     if(r != KEM_SUCCESS) return KEM_ERROR;
+     r = ks_extract(dahs, 32, zeros, 32, st->ms);
+     if(r != KEM_SUCCESS) return KEM_ERROR;
      wc_ForceZero(dhs);
      wc_ForceZero(dahs);
      return KEM_SUCCESS;
