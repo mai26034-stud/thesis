@@ -68,7 +68,24 @@ static kem_status_t derive_secret(const uint8_t *secret, size_t secret_len, cons
 }
 
 kem_status_t derive_handshake_secrets(const uint8_t *ss_ephemeral, size_t ss_eph_len, const uint8_t *ss_auth, size_t ss_auth_len, uint8_t *main_secret_out){
-     uint8_t zeros[32] = {0};
+     ks_state_t st;
+     kem_status_r r = ks_stage_handshake(&st, ss_ephemeral, ss_eph_len);
+     if(r != KEM_SUCCESS){
+          ks_state_clear(&st);
+          return KEM_ERROR;
+     }
+     r = ks_stage_auth(&st, ss_auth, ss_auth_len);
+     if(r != KEM_SUCCESS){
+          ks_state_clear(&st);
+          return KEM_ERROR;
+     }
+     if(memcpy(main_secret_out, st.ms, 32) != 0){
+          ks_state_clear(&st);
+          return KEM_ERROR;
+     }
+     ks_state_clear(&st);
+     return KEM_SUCCESS
+     /*uint8_t zeros[32] = {0};
      uint8_t empty[1] = {0};
      uint8_t early_secret[32];
      uint8_t dES[32];
@@ -102,7 +119,7 @@ kem_status_t derive_handshake_secrets(const uint8_t *ss_ephemeral, size_t ss_eph
      wc_ForceZero(dHS, 32);
      wc_ForceZero(auth_handshake_secret, 32);
      wc_ForceZero(dAHS, 32);
-     return KEM_SUCCESS;
+     return KEM_SUCCESS;*/
 }
 
 kem_status_t ks_extract(const uint8_t *salt, size_t salt_len, const uint8_t *ikm, size_t ikm_len, uint8_t *out){
@@ -147,11 +164,11 @@ kem_status_t ks_stage_auth(ks_state_t *st, const uint8_t *ss_auth, size_t ss_aut
      if(st == NULL || ss_auth == NULL) return KEM_ERROR;
      uint8_t zeros[32] = {0};
      uint8_t dhs[32], th0[32], dahs[32];
-     kem_status_t r = ks_derive_secret(st->hs, "derived", th0, dhs);
+     kem_status_t r = empty_hash(th0);
+     if(r != KEM_SUCCESS) return KEM_ERROR;
+     r = ks_derive_secret(st->hs, "derived", th0, dhs);
      if(r != KEM_SUCCESS) return KEM_ERROR;
      r = ks_extract(dhs, 32, ss_auth, ss_auth_len, st->ahs);
-     if(r != KEM_SUCCESS) return KEM_ERROR;
-     r = empty_hash(th0);
      if(r != KEM_SUCCESS) return KEM_ERROR;
      r = ks_derive_secret(st->ahs, "derived", th0, dahs);
      if(r != KEM_SUCCESS) return KEM_ERROR;
