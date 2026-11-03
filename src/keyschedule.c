@@ -69,7 +69,7 @@ kem_status_t derive_handshake_secrets(const uint8_t *ss_ephemeral, size_t ss_eph
           ks_state_clear(&st);
           return KEM_ERROR;
      }
-     memcpy(main_secret_out, st.ms, 32)
+     memcpy(main_secret_out, st.ms, 32);
      ks_state_clear(&st);
      return KEM_SUCCESS;
 }
