@@ -13,4 +13,7 @@ kem_status_t ks_extract(const uint8_t *salt, size_t salt_len, const uint8_t *ikm
 kem_status_t ks_expand_label(const uint8_t *secret, const char *label, const uint8_t *ctx, size_t ctx_len, uint8_t *out, size_t out_len);
 kem_status_t ks_derive_secret(const uint8_t *secret, const char *label, const uint8_t *th, uint8_t *out);
 kem_status_t ks_traffic_keys(const uint8_t *traffic_secret, uint8_t *key, uint8_t *iv);
+kem_status_t ks_stage_handshake(ks_state_t *st, const uint8_t *ss_eph, size_t ss_eph_len);
+kem_status_t ks_stage_auth(ks_state_t *st, const uint8_t *ss_auth, size_t ss_auth_len);
+void ks_state_clear(ks_state_t *st);
 #endif
