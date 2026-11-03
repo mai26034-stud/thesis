@@ -8,6 +8,10 @@
 #include <string.h>
 #include <stdint.h>
 
+static kem_status_t empty_hash(uint8_t *out){
+     uint8_t empty[1] = {0};
+     return transcript_hash(empty, 0, out);
+}
 static const char TLS13_PREFIX[6] = {'t', 'l', 's', '1', '3', ' '};
 kem_status_t ks_expand_label(const uint8_t *secret, const char *label, const uint8_t *context, size_t context_len, uint8_t *out, size_t out_len){
      if(secret == NULL || label == NULL || out == NULL) return KEM_ERROR;
