@@ -8,10 +8,6 @@
 #include <string.h>
 #include <stdint.h>
 
-static kem_status_t empty_hash(uint8_t *out){
-     uint8_t empty[1] = {0};
-     return transcript_hash(empty, 0, out);
-}
 static const char TLS13_PREFIX[6] = {'t', 'l', 's', '1', '3', ' '};
 kem_status_t ks_expand_label(const uint8_t *secret, const char *label, const uint8_t *context, size_t context_len, uint8_t *out, size_t out_len){
      if(secret == NULL || label == NULL || out == NULL) return KEM_ERROR;
@@ -54,6 +50,11 @@ static kem_status_t transcript_hash(const uint8_t *msgs, size_t msgs_len, uint8_
      ret = wc_Sha256Final(&sha, out);
      if(ret != 0) return KEM_ERROR;
      return KEM_SUCCESS;
+}
+
+static kem_status_t empty_hash(uint8_t *out){
+     uint8_t empty[1] = {0};
+     return transcript_hash(empty, 0, out);
 }
 
 static kem_status_t derive_secret(const uint8_t *secret, size_t secret_len, const char *label, const uint8_t *msgs, size_t msgs_len, uint8_t *out){
@@ -149,6 +150,8 @@ kem_status_t ks_stage_auth(ks_state_t *st, const uint8_t *ss_auth, size_t ss_aut
      kem_status_t r = ks_derive_secret(st->hs, "derived", th0, dhs);
      if(r != KEM_SUCCESS) return KEM_ERROR;
      r = ks_extract(dhs, 32, ss_auth, ss_auth_len, st->ahs);
+     if(r != KEM_SUCCESS) return KEM_ERROR;
+     r = empty_hash(th0);
      if(r != KEM_SUCCESS) return KEM_ERROR;
      r = ks_derive_secret(st->ahs, "derived", th0, dahs);
      if(r != KEM_SUCCESS) return KEM_ERROR;
