@@ -12,7 +12,7 @@ static const char TLS13_PREFIX[6] = {'t', 'l', 's', '1', '3', ' '};
 kem_status_t ks_expand_label(const uint8_t *secret, const char *label, const uint8_t *context, size_t context_len, uint8_t *out, size_t out_len){
      if(secret == NULL || label == NULL || out == NULL) return KEM_ERROR;
      if(context == NULL && context_len > 0) return KEM_ERROR;
-     if(6 + strlen(label)) > 255 || context_len > 255) return KEM_ERROR;
+     if(6 + strlen(label) > 255 || context_len > 255) return KEM_ERROR;
      uint8_t hkdf_label[514];
      size_t pos = 0;
 
@@ -118,4 +118,5 @@ kem_status_t ks_traffic_keys(const uint8_t *traffic_secret, uint8_t *key, uint8_
      if(r != KEM_SUCCESS) return KEM_ERROR;
      r = ks_expand_label(traffic_secret, "iv", NULL, 0, iv, 12);
      if(r != KEM_SUCCESS) return KEM_ERROR;
+     return KEM_SUCCESS;
 }
