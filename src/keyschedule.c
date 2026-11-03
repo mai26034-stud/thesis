@@ -103,7 +103,7 @@ kem_status_t derive_handshake_secrets(const uint8_t *ss_ephemeral, size_t ss_eph
 kem_status_t ks_extract(const uint8_t *salt, size_t salt_len, const uint8_t *ikm, size_t ikm_len, uint8_t *out){
      if(ikm == NULL || out == NULL) return KEM_ERROR;
      int r = wc_HKDF_Extract(WC_SHA256, salt, (word32)salt_len, ikm, (word32)ikm_len, out);
-     if(r != KEM_SUCCESS) return KEM_ERROR;
+     if(r != 0) return KEM_ERROR;
      return KEM_SUCCESS;
 }
 
