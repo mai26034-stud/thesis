@@ -97,7 +97,7 @@ kem_status_t derive_handshake_secrets(const uint8_t *ss_ephemeral, size_t ss_eph
      wc_ForceZero(dHS, 32);
      wc_ForceZero(auth_handshake_secret, 32);
      wc_ForceZero(dAHS, 32);
-     return KEM_SUCCESS;  // Εκκρεμεί να ελεγχθεί ότι το WC_SHA256 είναι το σωστό όνομα μεταβλητής, ότι υπάρχουν τα wc_HKDF_Extract και wc_HKDF_Expand αλλιώς να τα ενεργοποιήσω, ότι η υπογραφή το wc_HKDF_Extract έχει την σωστή σειρά εισόδων και ότι το wc_InitSha256 παίρνει heap/devId εισόδους όπως το έχω.
+     return KEM_SUCCESS;
 }
 
 kem_status_t ks_extract(const uint8_t *salt, size_t salt_len, const uint8_t *ikm, size_t ikm_len, uint8_t *out){
@@ -131,5 +131,17 @@ kem_status_t ks_stage_handshake(ks_state_t *st, const uint8_t *ss_eph, size_t ss
      st->hs = ks_extract(des, 32, ss_eph, ss_eph_len);
      wc_ForceZero(es);
      wc_ForceZero(des);
+     return KEM_SUCCESS;
+}
+
+kem_status_t ks_stage_auth(ks_state_t *st, const uint8_t *ss_auth, size_t ss_auth_len){
+     if(st == NULL || ss_auth == NULL) return KEM_ERROR;
+     kem_status_t dhs = ks_derive_secret(st->hs, "derived", th0);
+     if(dhs != KEM_SUCCESS) return KEM_ERROR;
+     st->ahs = ks_extract(dhs, 32, ss_auth, ss_auth_len);
+     dahs = ks_derive_secret(st->ahs, "derived", th0);
+     st->ms = ks_extract(dahs, 32, zeros, 32);
+     wc_ForceZero(dhs);
+     wc_ForceZero(dahs);
      return KEM_SUCCESS;
 }
