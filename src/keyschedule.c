@@ -157,7 +157,12 @@ kem_status_t ks_stage_auth(ks_state_t *st, const uint8_t *ss_auth, size_t ss_aut
      if(r != KEM_SUCCESS) return KEM_ERROR;
      r = ks_extract(dahs, 32, zeros, 32, st->ms);
      if(r != KEM_SUCCESS) return KEM_ERROR;
-     wc_ForceZero(dhs);
-     wc_ForceZero(dahs);
+     wc_ForceZero(dhs, 32);
+     wc_ForceZero(dahs, 32);
      return KEM_SUCCESS;
+}
+
+void ks_state_clear(ks_state_t *st){
+     if(st == NULL) return;
+     wc_ForceZero(st, sizeof(*st));
 }
