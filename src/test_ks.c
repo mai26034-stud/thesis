@@ -101,7 +101,9 @@ int main(void){
     number_of_failures += test_ks_deterministic();
     number_of_failures += test_ks_sensitive();
     number_of_failures += test_rfc8448();
-
+    number_of_failures += test_stage_8448();
+    number_of_failures += test_stage_chain();
+    
     return number_of_failures;
 }
 
@@ -273,11 +275,14 @@ static int test_rfc8448(void){
 
 static int test_stage_8448(void){
     ks_state_t st;
-    kem_status_r r = ks_stage_handshake(&st, rfc_ikm, 32);
-    if(r != KEM_SUCCESS) return 1;
+    kem_status_t r = ks_stage_handshake(&st, rfc_ikm, 32);
     int failures = ks_check("stage handshake", r, st.hs, rfc_hs, 32);
+    if(r != KEM_SUCCESS){
+        ks_state_close(&st);
+        return 1;
+    }
     ks_state_clear(&st);
-    if(failures == 0) printf("All was OK :)");
+    if(failures == 0) printf("[stage handshake] RFC 8448 was OK :)\n");
     return failures;
 }
 
@@ -285,11 +290,12 @@ static int test_stage_chain(void){
     uint8_t eph[32], auth[32];
     uint8_t zeros[32] = {0};
     uint8_t th0[32];
-    transcript_init(&th0);
-    kem_status_t r = transcript_get_hash(&te, th_empty);
+    transcript_t te;
+    transcript_init(&te);
+    kem_status_t r = transcript_get_hash(&te, th0);
     memset(eph, 0xAA, 32);
     memset(auth, 0xBB, 32);
-    kem_status_t r = ks_stage_handshake(&st, eph, 32);
+    r = ks_stage_handshake(&st, eph, 32);
     if(r != KEM_SUCCESS) return 1;
     r = ks_stage_auth(&st, auth, 32);
     if(r != KEM_SUCCESS) return 1;
