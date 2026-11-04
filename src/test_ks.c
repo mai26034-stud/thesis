@@ -298,5 +298,17 @@ static int test_stage_chain(void){
     if(r != KEM_SUCCESS) return 1;
     r = ks_stage_auth(&st, auth, 32);
     if(r != KEM_SUCCESS) return 1;
-    
+    r = ks_derive_secret(es, "derived", th0, des);
+    if(r != KEM_SUCCESS) failures++;
+    r = ks_exctract(des, 32, eph, 32, hs);
+    if(r != KEM_SUCCESS) failures++;
+    r = ks_derive_secret(hs, "derived", th0, dhs);
+    if(r != KEM_SUCCESS) failures++;
+    r = ks_exctract(dhs, auth, 32, ahs);
+    if(r != KEM_SUCCESS) failures++;
+    r = ks_derive_secret(ahs, "derived", th0, dahs);
+    if(r != KEM_SUCCESS) failures++;
+    r = ks_extract(dahs, 32, zeros, 32, ms);
+    if(r != KEM_SUCCESS) failures++;
+    failures += ks_check("chain hs", KEM_SUCCESS, st.hs, hs, 32);
 }
