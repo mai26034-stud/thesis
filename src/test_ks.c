@@ -287,28 +287,32 @@ static int test_stage_chain(void){
     uint8_t eph[32], auth[32];
     uint8_t zeros[32] = {0};
     uint8_t th0[32];
-    uint8_t th_empty[32], d[32], hs[32], c[32], s[32], dh[32], ms[32], fin[32];
+    uint8_t es[32], des[32], hs[32], dhs[32], ahs[32], dahs[32], ms[32];
     int failures = 0;
     transcript_t te;
     transcript_init(&te);
     kem_status_t r = transcript_get_hash(&te, th0);
+    if(r != KEM_SUCCESS) failures++;
     memset(eph, 0xAA, 32);
     memset(auth, 0xBB, 32);
     r = ks_stage_handshake(&st, eph, 32);
-    if(r != KEM_SUCCESS) return 1;
+    if(r != KEM_SUCCESS) failures++;
+    r = ks_extract(zeros, 32, zeros, 32, es);
+    if(r != KEM_SUCCESS) failures++;
     r = ks_stage_auth(&st, auth, 32);
-    if(r != KEM_SUCCESS) return 1;
+    if(r != KEM_SUCCESS) failures++;
     r = ks_derive_secret(es, "derived", th0, des);
     if(r != KEM_SUCCESS) failures++;
-    r = ks_exctract(des, 32, eph, 32, hs);
+    r = ks_extract(des, 32, eph, 32, hs);
     if(r != KEM_SUCCESS) failures++;
     r = ks_derive_secret(hs, "derived", th0, dhs);
     if(r != KEM_SUCCESS) failures++;
-    r = ks_exctract(dhs, auth, 32, ahs);
+    r = ks_extract(dhs, 32, auth, 32, ahs);
     if(r != KEM_SUCCESS) failures++;
     r = ks_derive_secret(ahs, "derived", th0, dahs);
     if(r != KEM_SUCCESS) failures++;
     r = ks_extract(dahs, 32, zeros, 32, ms);
     if(r != KEM_SUCCESS) failures++;
     failures += ks_check("chain hs", KEM_SUCCESS, st.hs, hs, 32);
+    
 }
