@@ -277,19 +277,18 @@ static int test_stage_8448(void){
     ks_state_t st;
     kem_status_t r = ks_stage_handshake(&st, rfc_ikm, 32);
     int failures = ks_check("stage handshake", r, st.hs, rfc_hs, 32);
-    if(r != KEM_SUCCESS){
-        ks_state_close(&st);
-        return 1;
-    }
     ks_state_clear(&st);
     if(failures == 0) printf("[stage handshake] RFC 8448 was OK :)\n");
     return failures;
 }
 
 static int test_stage_chain(void){
+    ks_state_t st;
     uint8_t eph[32], auth[32];
     uint8_t zeros[32] = {0};
     uint8_t th0[32];
+    uint8_t th_empty[32], d[32], hs[32], c[32], s[32], dh[32], ms[32], fin[32];
+    int failures = 0;
     transcript_t te;
     transcript_init(&te);
     kem_status_t r = transcript_get_hash(&te, th0);
