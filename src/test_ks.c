@@ -313,6 +313,7 @@ static int test_stage_chain(void){
     if(r != KEM_SUCCESS) failures++;
     r = ks_extract(dahs, 32, zeros, 32, ms);
     if(r != KEM_SUCCESS) failures++;
+    failures += ks_check("chain hs", KEM_SUCCESS, st.hs, hs, 32);
     failures += ks_check("chain ahs", KEM_SUCCESS, st.ahs, ahs, 32);
     failures += ks_check("chain ms", KEM_SUCCESS, st.ms, ms, 32);
     ks_state_clear(&st);
