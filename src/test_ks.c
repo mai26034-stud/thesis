@@ -314,5 +314,9 @@ static int test_stage_chain(void){
     r = ks_extract(dahs, 32, zeros, 32, ms);
     if(r != KEM_SUCCESS) failures++;
     failures += ks_check("chain hs", KEM_SUCCESS, st.hs, hs, 32);
-    
+    if(memcmp(st.ahs, ahs) != 0) failures++;
+    if(memcmp(st.ms, ms) != 0) failures++;
+    ks_state_clear(&st);
+    if(failures == 0) printf("All was completed successfully :)\n");
+    return failures;
 }
