@@ -283,6 +283,10 @@ static int test_stage_8448(void){
 
 static int test_stage_chain(void){
     uint8_t eph[32], auth[32];
+    uint8_t zeros[32] = {0};
+    uint8_t th0[32];
+    transcript_init(&th0);
+    kem_status_t r = transcript_get_hash(&te, th_empty);
     memset(eph, 0xAA, 32);
     memset(auth, 0xBB, 32);
     kem_status_t r = ks_stage_handshake(&st, eph, 32);
