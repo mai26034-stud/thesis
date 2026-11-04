@@ -58,6 +58,7 @@ static kem_status_t empty_hash(uint8_t *out){
 }
 
 kem_status_t derive_handshake_secrets(const uint8_t *ss_ephemeral, size_t ss_eph_len, const uint8_t *ss_auth, size_t ss_auth_len, uint8_t *main_secret_out){
+     if(main_secret_out == NULL) return KEM_ERROR;
      ks_state_t st;
      kem_status_t r = ks_stage_handshake(&st, ss_ephemeral, ss_eph_len);
      if(r != KEM_SUCCESS){
@@ -117,15 +118,35 @@ kem_status_t ks_stage_auth(ks_state_t *st, const uint8_t *ss_auth, size_t ss_aut
      uint8_t zeros[32] = {0};
      uint8_t dhs[32], th0[32], dahs[32];
      kem_status_t r = empty_hash(th0);
-     if(r != KEM_SUCCESS) return KEM_ERROR;
+     if(r != KEM_SUCCESS){
+          wc_ForceZero(dhs, 32);
+          wc_ForceZero(dahs, 32);
+          return KEM_ERROR;
+     }
      r = ks_derive_secret(st->hs, "derived", th0, dhs);
-     if(r != KEM_SUCCESS) return KEM_ERROR;
+     if(r != KEM_SUCCESS){
+          wc_ForceZero(dhs, 32);
+          wc_ForceZero(dahs, 32);
+          return KEM_ERROR;
+     }
      r = ks_extract(dhs, 32, ss_auth, ss_auth_len, st->ahs);
-     if(r != KEM_SUCCESS) return KEM_ERROR;
+     if(r != KEM_SUCCESS){
+          wc_ForceZero(dhs, 32);
+          wc_ForceZero(dahs, 32);
+          return KEM_ERROR;
+     }
      r = ks_derive_secret(st->ahs, "derived", th0, dahs);
-     if(r != KEM_SUCCESS) return KEM_ERROR;
+     if(r != KEM_SUCCESS){
+          wc_ForceZero(dhs, 32);
+          wc_ForceZero(dahs, 32);
+          return KEM_ERROR;
+     }
      r = ks_extract(dahs, 32, zeros, 32, st->ms);
-     if(r != KEM_SUCCESS) return KEM_ERROR;
+     if(r != KEM_SUCCESS){
+          wc_ForceZero(dhs, 32);
+          wc_ForceZero(dahs, 32);
+          return KEM_ERROR;
+     }
      wc_ForceZero(dhs, 32);
      wc_ForceZero(dahs, 32);
      return KEM_SUCCESS;
