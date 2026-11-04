@@ -90,6 +90,8 @@ static int test_transcript_on_cumulativity(void);
 static int test_ks_deterministic(void);
 static int test_ks_sensitive(void);
 static int test_rfc8448(void);
+static int test_stage_8448(void);
+static int test_stage_chain(void);
 
 int main(void){
     int number_of_failures = 0;
@@ -267,4 +269,25 @@ static int test_rfc8448(void){
     failures += ks_check("9 server finished key", r, fin, rfc_s_fin, 32);
     if(failures == 0) printf("[RFC 8448] key schedule is OK\n");
     return failures;
+}
+
+static int test_stage_8448(void){
+    ks_state_t st;
+    kem_status_r r = ks_stage_handshake(&st, rfc_ikm, 32);
+    if(r != KEM_SUCCESS) return 1;
+    int failures = ks_check("stage handshake", r, st.hs, rfc_hs, 32);
+    ks_state_clear(&st);
+    if(failures == 0) printf("All was OK :)");
+    return failures;
+}
+
+static int test_stage_chain(void){
+    uint8_t eph[32], auth[32];
+    memset(eph, 0xAA, 32);
+    memset(auth, 0xBB, 32);
+    kem_status_t r = ks_stage_handshake(&st, eph, 32);
+    if(r != KEM_SUCCESS) return 1;
+    r = ks_stage_auth(&st, auth, 32);
+    if(r != KEM_SUCCESS) return 1;
+    
 }
