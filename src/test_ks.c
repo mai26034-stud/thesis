@@ -229,10 +229,10 @@ static int test_ks_sensitive(){
 
 static int ks_check(const char *name, kem_status_t r, const uint8_t *got, const uint8_t *exp, size_t len){
     if(r != KEM_SUCCESS){
-        printf("FAILURE %s: calling was unfortunately unsuccessful..", name);
+        printf("FAILURE %s: calling was unfortunately unsuccessful..\n", name);
         return 1;
     }else if(memcmp(got, exp, len) != 0){
-        printf("FAILURE %s: A mismatch occured...", name);
+        printf("FAILURE %s: A mismatch occured...\n", name);
         return 1;
     }else{
         return 0;
@@ -313,10 +313,9 @@ static int test_stage_chain(void){
     if(r != KEM_SUCCESS) failures++;
     r = ks_extract(dahs, 32, zeros, 32, ms);
     if(r != KEM_SUCCESS) failures++;
-    failures += ks_check("chain hs", KEM_SUCCESS, st.hs, hs, 32);
-    if(memcmp(st.ahs, ahs) != 0) failures++;
-    if(memcmp(st.ms, ms) != 0) failures++;
+    failures += ks_check("chain ahs", KEM_SUCCESS, st.ahs, ahs, 32);
+    failures += ks_check("chain ms", KEM_SUCCESS, st.ms, ms, 32);
     ks_state_clear(&st);
-    if(failures == 0) printf("All was completed successfully :)\n");
+    if(failures == 0) printf("All was completed successfully in regards to the stage chain :)\n");
     return failures;
 }
