@@ -118,11 +118,7 @@ kem_status_t ks_stage_auth(ks_state_t *st, const uint8_t *ss_auth, size_t ss_aut
      uint8_t zeros[32] = {0};
      uint8_t dhs[32], th0[32], dahs[32];
      kem_status_t r = empty_hash(th0);
-     if(r != KEM_SUCCESS){
-          wc_ForceZero(dhs, 32);
-          wc_ForceZero(dahs, 32);
-          return KEM_ERROR;
-     }
+     if(r != KEM_SUCCESS) return KEM_ERROR;
      r = ks_derive_secret(st->hs, "derived", th0, dhs);
      if(r != KEM_SUCCESS){
           wc_ForceZero(dhs, 32);
