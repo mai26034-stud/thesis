@@ -12,13 +12,6 @@
 #define WARMUP 3
 #define ITERATIONS 30
 
-
-static void print_hex(const char *label, const uint8_t *buf, size_t len){
-    printf("%s: ", label);
-    for(size_t i = 0; i < len; i++) printf("%02x", buf[i]);
-    printf("\n");
-}
-
 static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t *ca_pub, const uint8_t *cred, size_t cred_len, const uint8_t *srv_sk, int iteration){
     fflush(stdout);
     pid_t pid = fork();
@@ -33,7 +26,7 @@ static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t
         timings_init(&tm);
         kem_status_t r = handshake_server(fd, auth_kem_name, cred, cred_len, srv_sk, ms, &stats, &tm);
         if(r != KEM_SUCCESS){
-            printf("Server unfortunately failed :(\n");
+            fprintf(stderr, "Server unfortunately failed :(\n");
             transport_close(fd);
             exit(1);
         }
@@ -59,13 +52,18 @@ static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t
     timings_t tm;
     timings_init(&tm);
     if(handshake_client(fd, auth_kem_name, ca_pub, ms, &stats, &tm) != KEM_SUCCESS){
-        printf("  The client unfortunately failed :(\n");
+        fprintf(stderr, "  The client unfortunately failed :(\n");
         ok = 1;
     } else if(iteration > 0){
         metrics_csv_row(stdout, auth_kem_name, "client", iteration, &tm, &stats);
     }
     transport_close(fd);
-    waitpid(pid, NULL, 0);
+    int status;
+    waitpid(pid, &status, 0);
+    if(!WIFEXITED(status) || WEXITSTATUS(status) != 0){
+        fprintf(stderr, "The server regretably failed :(\n");
+        ok = 1;
+    }
     return ok;
 }
 
