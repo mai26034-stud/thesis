@@ -1,12 +1,11 @@
 #ifndef RECORD_H
 #define RECORD_H
-#include <wolfssl/wolfcrypt/aes.h>
 #include <stdint.h>
 #include <stddef.h>
 #include "kem.h"
 
 typedef struct{
-    uint8_t keyp16[;
+    uint8_t key[16];
     uint8_t iv[12];
     uint64_t seq;
 }record_dir_t;
