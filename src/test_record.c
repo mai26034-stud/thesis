@@ -77,10 +77,49 @@ static int test_seal_8448(void){
     return failures;
 }
 
+static int test_open_8448(void){
+    record_dir_t d;
+    int failures = 0;
+    uint8_t out[128];
+    size_t out_len = 0;
+    uint8_t type = 0;
+    kem_status_t r = record_init(&d, rfc_c_hs);
+    if(r != KEM_SUCCESS) failures++;
+    r = record_open(&d, rfc_cfin_record, 58, out, sizeof(out), &out_len, &type);
+    failures += ks_check("open 8448", r, out, rfc_cfin_payload, 36);
+    if(out_len != 36) failures++;
+    if(type != 22) failures++;
+    if(d.seq != 1) failures++;
+    record_clear(&d);
+    if(failures == 0) printf("All worked perfectly :)\n");
+    return failures;
+}
+
+static int test_open_tamper(void){
+    record_dir_t d;
+    int failures = 0;
+    uint8_t out[128];
+    size_t out_len = 0;
+    uint8_t type = 0;
+    uint8_t buf[58];
+    memcpy(buf, rfc_cfin_record, 58);
+    buf[10] ^= 1;
+    kem_status_t r = record_init(&d, rfc_c_hs);
+    if(r != KEM_SUCCESS) failures++;
+    r = record_open(&d, buf, 58, out, sizeof(out), &out_len, &type);
+    if(r == KEM_SUCCESS) failures++;
+    if(d.seq != 0) failures++;
+    record_clear(&d);
+    if(failures == 0) printf("All worked flawlessly :)\n");
+    return failures;
+}
+
 int main(void){
     int number_of_failures = 0;
     number_of_failures += test_record_init();
     number_of_failures += test_seal_8448();
+    number_of_failures += test_open_8448();
+    number_of_failures += test_open_tamper();
 
     return number_of_failures;
 }
