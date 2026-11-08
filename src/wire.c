@@ -12,7 +12,7 @@ void wire_stats_init(wire_stats_t *stats){
 }
 
 kem_status_t wire_write(uint8_t type, const uint8_t *content, size_t content_len, uint8_t *out, size_t out_cap, size_t *written, wire_stats_t *stats){
-    if(out == NULL || written == NULL || stats == NULL) return KEM_ERROR;
+    if(out == NULL || written == NULL) return KEM_ERROR;
     if(content == NULL && content_len > 0) return KEM_ERROR;
 
     size_t total = 1 + 4 + content_len;
@@ -26,8 +26,10 @@ kem_status_t wire_write(uint8_t type, const uint8_t *content, size_t content_len
     if(content_len > 0) memcpy(out + pos, content, content_len);
     pos += content_len;
 
-    stats->bytes_by_type[type] += total;
-    stats->total_bytes += total;
+    if(stats != NULL){
+        stats->bytes_by_type[type] += total;
+        stats->total_bytes += total;
+    }
     *written = total;
     return KEM_SUCCESS;
 }

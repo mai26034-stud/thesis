@@ -9,7 +9,8 @@ typedef enum{
      WIRE_SERVER_HELLO = 2,
      WIRE_SERVER_AUTH = 3,
      WIRE_CLIENT_AUTH = 4,
-     WIRE_FINISHED = 5
+     WIRE_FINISHED = 5,
+     WIRE_ENCRYPTED_EXTENSIONS = 6
 } wire_msg_type_t;
 
 typedef struct{

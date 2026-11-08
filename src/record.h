@@ -3,6 +3,11 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "kem.h"
+#define REC_HDR_LEN 5
+#define REC_TAG_LEN 16
+#define REC_MAX_PLAIN 16384
+#define REC_TYPE_HANDSHAKE 22
+#define REC_TYPE_APPDATA 23
 
 typedef struct{
     uint8_t key[16];
