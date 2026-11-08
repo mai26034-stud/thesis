@@ -84,6 +84,20 @@ static const uint8_t rfc_s_fin[32] = {
     0xf2, 0x88, 0xa1, 0xd8, 0xcd, 0xc1, 0x9f, 0xc8
 };
 
+static const uint8_t rfc_th_sf[32] = {
+    0x96, 0x08, 0x10, 0x2a, 0x0f, 0x1c, 0xcc, 0x6d,
+    0xb6, 0x25, 0x0b, 0x7b, 0x7e, 0x41, 0x7b, 0x1a,
+    0x00, 0x0e, 0xaa, 0xda, 0x3d, 0xaa, 0xe4, 0x77,
+    0x7a, 0x76, 0x86, 0xc9, 0xff, 0x83, 0xdf, 0x13
+};
+
+static const uint8_t rfc_c_verify[32] = {
+    0xa8, 0xec, 0x43, 0x6d, 0x67, 0x76, 0x34, 0xae, 
+    0x52, 0x5a, 0xc1, 0xfc, 0xeb, 0xe1, 0x1a, 0x03,
+    0x9e, 0xc1, 0x76, 0x94, 0xfa, 0xc6, 0xe9, 0x85,
+    0x27, 0xb6, 0x42, 0xf2, 0xed, 0xd5, 0xce, 0x61
+};
+
 static int test_transcript_on_determinism(void);
 static int test_transcript_on_sensitivity(void);
 static int test_transcript_on_cumulativity(void);
@@ -92,6 +106,7 @@ static int test_ks_sensitive(void);
 static int test_rfc8448(void);
 static int test_stage_8448(void);
 static int test_stage_chain(void);
+static int test_finished_8448(void);
 
 int main(void){
     int number_of_failures = 0;
@@ -103,6 +118,7 @@ int main(void){
     number_of_failures += test_rfc8448();
     number_of_failures += test_stage_8448();
     number_of_failures += test_stage_chain();
+    number_of_failures += test_finished_8448();
     
     return number_of_failures;
 }
@@ -318,5 +334,14 @@ static int test_stage_chain(void){
     failures += ks_check("chain ms", KEM_SUCCESS, st.ms, ms, 32);
     ks_state_clear(&st);
     if(failures == 0) printf("All was completed successfully in regards to the stage chain :)\n");
+    return failures;
+}
+
+static int test_finished_8448(void){
+    int failures = 0;
+    uint8_t out[32];
+    kem_status_t r = ks_finished(rfc_c_hs, "finished", rfc_th_sf, out);
+    failures += ks_check("finished 8448", r, out, rfc_c_verify, 32);
+    if(failures == 0) printf("[finished] RFC 8448 is ok..\n");
     return failures;
 }

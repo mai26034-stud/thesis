@@ -16,4 +16,5 @@ kem_status_t ks_traffic_keys(const uint8_t *traffic_secret, uint8_t *key, uint8_
 kem_status_t ks_stage_handshake(ks_state_t *st, const uint8_t *ss_eph, size_t ss_eph_len);
 kem_status_t ks_stage_auth(ks_state_t *st, const uint8_t *ss_auth, size_t ss_auth_len);
 void ks_state_clear(ks_state_t *st);
+kem_status_t ks_finished(const uint8_t *base_secret, const char *label, const uint8_t *th, uint8_t *verify_out);
 #endif

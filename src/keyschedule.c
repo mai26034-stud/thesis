@@ -152,3 +152,23 @@ void ks_state_clear(ks_state_t *st){
      if(st == NULL) return;
      wc_ForceZero(st, sizeof(*st));
 }
+
+kem_status_t ks_finished(const uint8_t *base_secret, const char *label, const uint8_t *th, uint8_t *verify_out){
+     if(base_secret == NULL || label == NULL || th == NULL || verify_out == NULL) return KEM_ERROR;
+     uint8_t fk[32];
+     kem_status_t r = ks_expand_label(base_secret, label, NULL, 0, fk, 32);
+     if(r != KEM_SUCCESS){
+          wc_ForceZero(fk, 32);
+          return KEM_ERROR;
+     }
+     Hmac hmac;
+     int ret = wc_HmacInit(&hmac, NULL, INVALID_DEVID);
+     if(ret == 0) ret = wc_HmacSetKey(&hmac, WC_SHA256, fk, 32);
+     if(ret == 0) ret = wc_HmacUpdate(&hmac, th, 32);
+     if(ret == 0) ret = wc_HmacFinal(&hmac, verify_out);
+     wc_HmacFree(&hmac);
+     wc_ForceZero(&hmac, sizeof(hmac));
+     wc_ForceZero(fk, 32);
+     if(ret != 0) return KEM_ERROR;
+     return KEM_SUCCESS;
+}
