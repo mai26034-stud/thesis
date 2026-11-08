@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "record.h"
 
 static kem_status_t recv_message(int fd, uint8_t *buf, size_t buf_cap, uint8_t *type_out, const uint8_t **content_out, size_t *content_len_out, size_t *total_out){
     if(buf == NULL || type_out == NULL || content_out == NULL || content_len_out == NULL || total_out == NULL) return KEM_ERROR;
@@ -23,6 +24,52 @@ static kem_status_t recv_message(int fd, uint8_t *buf, size_t buf_cap, uint8_t *
     if(t != KEM_SUCCESS) return KEM_ERROR;
     *total_out = 5 + content_len;
     return KEM_SUCCESS;
+}
+
+static kem_status_t send_encrypted(int fd, record_dir_t *tx, uint8_t type, const uint8_t *content, size_t content_len, transcript_t *tr, wire_stats_t *stats){
+    uint8_t plain[REC_MAX_PLAIN];
+    uint8_t rec[REC_HDR_LEN + REC_MAX_PLAIN + 1 + REC_TAG_LEN];
+    size_t plain_len, rec_len;
+    kem_status_t r = wire_write(type, content, content_len, plain, sizeof(plain), &plain_len, NULL);
+    if(r != KEM_SUCCESS) return KEM_ERROR;
+    r = transcript_append(tr, plain, plain_len);
+    if(r != KEM_SUCCESS) return KEM_ERROR;
+    r = record_seal(tx, REC_TYPE_HANDSHAKE, plain, plain_len, rec, sizeof(rec), &rec_len);
+    if(r != KEM_SUCCESS) return KEM_ERROR;
+    r = transport_send(fd, rec, rec_len);
+    if(r != KEM_SUCCESS) return KEM_ERROR;
+    if(stats != NULL){
+        stats->bytes_by_type[type] += rec_len;
+        stats->total_bytes += rec_len;
+    }
+    return KEM_SUCCESS;
+}
+
+static kem_status_t recv_encrypted(int fd, record_dir_t *rx, uint8_t *buf, size_t buf_cap, uint8_t *type_out, const uint8_t **content_out, size_t *content_len_out, transcript_t *tr){
+    uint8_t rec[REC_HDR_LEN + REC_MAX_PLAIN + 256];
+    size_t plain_len, consumed;
+    uint8_t ctype;
+    kem_status_t r = transport_recv(fd, rec, REC_HDR_LEN);
+    if(r != KEM_SUCCESS) return KEM_ERROR;
+    size_t body = ((size_t)rec[3] << 8) | rec[4];
+    if(REC_HDR_LEN + body > sizeof(rec)) return KEM_ERROR;
+    r = transport_recv(fd, rec + REC_HDR_LEN, body);
+    if(r != KEM_SUCCESS) return KEM_ERROR;
+    r = record_open(rx, rec, REC_HDR_LEN + body, buf, buf_cap, &plain_len, &ctype);
+    if(r != KEM_SUCCESS || ctype != REC_TYPE_HANDSHAKE) return KEM_ERROR;
+    r = wire_read(buf, plain_len, type_out, content_out, content_len_out, &consumed);
+    if(r != KEM_SUCCESS || consumed != plain_len) return KEM_ERROR;
+    r = transcript_append(tr, buf, plain_len);
+    if(r != KEM_SUCCESS) return KEM_ERROR;
+    return KEM_SUCCESS;
+}
+
+static int ct_equal(const uint8_t *a, const uint8_t *b, size_t len){
+    uint8_t diff = 0;
+    for(size_t i = 0; i < len; i++){
+        diff |= a[i] ^ b[i];
+    }
+    return diff == 0;
 }
 
 kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *ca_pub, uint8_t *main_secret_out, wire_stats_t *stats, timings_t *tm){
@@ -167,3 +214,4 @@ kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *
     free(eph_ct);
     return KEM_SUCCESS;
 }
+
