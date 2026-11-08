@@ -62,7 +62,7 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     t = recv_message(fd, msgbuf, sizeof(msgbuf), &type, &content, &content_len, &total);
     if(t != KEM_SUCCESS) return KEM_ERROR;
     if(type != WIRE_SERVER_HELLO){
-        printf("FAIL: client: wrong type %d\n", type);
+        fprintf(stderr, "FAIL: client: wrong type %d\n", type);
         return KEM_ERROR;
     }
     if(transcript_append(&tr, msgbuf, total) != KEM_SUCCESS) return KEM_ERROR;
@@ -98,7 +98,7 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     if(t != KEM_SUCCESS) return KEM_ERROR;
     wc_ForceZero(ss_eph, 32);
     wc_ForceZero(ss_auth, 32);
-    wc_ForceZero(eph_sk, 64);
+    wc_ForceZero(eph_sk, kem_sk_len(eph));
     kem_close(eph);
     kem_close(auth);
     free(auth_ct);
