@@ -5,12 +5,15 @@ LIBS = -lwolfssl -loqs
 
 CORE = kem.c kem_oqs.c kem_x25519.c kem_hybrid.c transcript.c keyschedule.c wire.c metrics.c credential.c transport.c handshake.c
 
-all: test_kem test_ks test_wire test_transport test_handshake test_baseline test_mqtt mqtt_smoke
+all: test_kem test_ks test_wire test_transport test_handshake test_baseline test_mqtt mqtt_smoke test_record
 
 test_kem: test_kem.c kem.c kem_oqs.c kem_x25519.c kem_hybrid.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
 
 test_ks: test_ks.c keyschedule.c transcript.c
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
+
+test_record: test_record.c record.c keyschedule.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
 
 test_wire: test_wire.c wire.c
@@ -32,6 +35,6 @@ mqtt_smoke: mqtt_smoke.c mqtt.c transport.c
 	$(CC) $(CFLAGS) $^ -o $@
 
 clean:
-	rm -f test_kem test_ks test_wire test_transport test_handshake test_baseline test_mqtt mqtt_smoke *.o
+	rm -f test_kem test_ks test_wire test_transport test_handshake test_baseline test_mqtt mqtt_smoke *.o test_record
 
 .PHONY: all clean
