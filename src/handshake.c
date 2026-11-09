@@ -121,7 +121,15 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     t = kem_decaps(eph, eph_sk, content, ss_eph);
     tm->eph_decaps_ns = metrics_now() - t0;
     if(t != KEM_SUCCESS) return KEM_ERROR;
-    
+    t0 - metrics_now();
+    t = ks_stage_handshake(&st, ss_eph, 32);
+    if(t != KEM_SUCCES) t = transcript_get_hash(&tr, th);
+    if(t != KEM_SUCCES) t = ks_derive_secret(st.hs, "c hs traffic", th, c_hs);
+    if(t != KEM_SUCCES) t = ks_derive_secret(st.hs, "s hs traffic", th, s_hs);
+    if(t != KEM_SUCCES) t = record_init(&hs_tx, c_hs);
+    if(t != KEM_SUCCES) t = record_init(&hs_rx, s_hs);
+    tm->key_schedule_ns += metrics_now() - t0;
+    if(t != KEM_SUCCES) return KEM_ERROR;
     t = recv_message(fd, msgbuf, sizeof(msgbuf), &type, &content, &content_len, &total);
     if(t != KEM_SUCCESS) return KEM_ERROR;
     if(type != WIRE_SERVER_AUTH) return KEM_ERROR;
