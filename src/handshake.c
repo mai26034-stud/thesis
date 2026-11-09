@@ -148,9 +148,20 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     t = kem_encaps(auth, server_auth_pk, auth_ct, ss_auth);
     tm->auth_encaps_ns = metrics_now() - t0;
     if(t != KEM_SUCCESS) return KEM_ERROR;
-    t = send_encrypted(fd, &hs_tx, WIRE_CLIENT_AUTH, auth_ct, kem_ct_len(auth), &tr, stats)
+    t = send_encrypted(fd, &hs_tx, WIRE_CLIENT_AUTH, auth_ct, kem_ct_len(auth), &tr, stats);
+    if(t != KEM_SUCCESS) return KEM_ERROR;
     t0 = metrics_now();
-    t = derive_handshake_secrets(ss_eph, 32, ss_auth, 32, main_secret_out);
+    t = ks_stage_auth(&st, ss_auth, 32);
+    if(t == KEM_SUCCESS) t = transcript_get_hash(&tr, th);
+    if(t == KEM_SUCCESS) t = ks_derive_secret(st.ahs, "c ahs traffic", th, c_ahs);
+    if(t == KEM_SUCCESS) t = ks_derive_secret(st.ahs, "s ahs traffic", th, s_ahs);
+    if(t == KEM_SUCCESS) t = record_init(&ahs_tx, c_ahs);
+    if(t == KEM_SUCCESS) t = record_init(&ahs_rx, s_ahs);
+    if(t == KEM_SUCCESS) t = ks_finished(st.ms, "client finished", th, c_vd);
+    tm->key_schedule_ns += metrics_now() - t0;
+    if(t != KEM_SUCCESS) return KEM_ERROR;
+    t = send_encrypted(fd, &ahs_tx, WIRE_FINISHED, c_vd, 32, &tr, stats);
+    if(t != KEM_SUCCESS) return KEM_ERROR;
     tm->total_ns = metrics_now() - t_start;
     tm->key_schedule_ns = metrics_now() - t0;
     if(t != KEM_SUCCESS) return KEM_ERROR;
