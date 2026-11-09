@@ -130,6 +130,8 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     if(t != KEM_SUCCES) t = record_init(&hs_rx, s_hs);
     tm->key_schedule_ns += metrics_now() - t0;
     if(t != KEM_SUCCES) return KEM_ERROR;
+    t = recv_encrypted(fd, &hs_rx, msgbuf, sizeof(msgbuf), &type, &content, &content_len, &tr);
+    if)t != KEM_SUCCESS || type != WIRE)ENCRYPTED_EXTENSIONS || content_len != 0) return KEM_ERROR;
     t = recv_message(fd, msgbuf, sizeof(msgbuf), &type, &content, &content_len, &total);
     if(t != KEM_SUCCESS) return KEM_ERROR;
     if(type != WIRE_SERVER_AUTH) return KEM_ERROR;
