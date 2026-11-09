@@ -75,6 +75,10 @@ static int ct_equal(const uint8_t *a, const uint8_t *b, size_t len){
 kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *ca_pub, uint8_t *main_secret_out, wire_stats_t *stats, timings_t *tm){
     if(tm == NULL) return KEM_ERROR;
     uint64_t t0;
+    ks_state_t st;
+    uint8_t th[32];
+    uint8_t c_hs[32], s_hs[32], c_ahs[32], s_ahs[32], c_ap[32], s_ap[32], c_vd[32], s_vd[32];
+    record_dir_t hs_tx, hs_rx, ahs_tx, ahs_rx;
     kem_t *eph = kem_open(EPHEMERAL_KEM);
     if(eph == NULL) return KEM_ERROR;
     kem_t *auth = kem_open(auth_kem_name);
