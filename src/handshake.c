@@ -263,9 +263,14 @@ kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *
     tm->auth_decaps_ns = metrics_now() - t0;
     if(t != KEM_SUCCESS) return KEM_ERROR;
     t0 = metrics_now();
-    t = derive_handshake_secrets(ss_eph, 32, ss_auth, 32, main_secret_out);
-    tm->total_ns = metrics_now() - t_start;
-    tm->key_schedule_ns = metrics_now() - t0;
+    t = ks_stage_auth(&st, ss_auth, 32);
+    if(t == KEM_SUCCESS) t = transcript_get_hash(&tr, th);
+    if(t == KEM_SUCCESS) t = ks_derive_secret(st.ahs, "c ahs traffic", th, c_ahs);
+    if(t == KEM_SUCCESS) t = ks_derive_secret(st.ahs, "s ahs traffic", th, s_ahs);
+    if(t == KEM_SUCCESS) t = record_init(&ahs_tx, s_ahs);
+    if(t == KEM_SUCCESS) t = record_init(&ahs_rx, c_ahs);
+    if(t == KEM_SUCCESS) t = ks_finished(st.ms, "client finished", th, c_vd);
+    tm->key_schedule_ns += metrics_now() - t0;
     if(t != KEM_SUCCESS) return KEM_ERROR;
     wc_ForceZero(ss_auth, 32);
     wc_ForceZero(ss_eph, 32);
