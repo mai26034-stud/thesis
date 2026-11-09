@@ -123,13 +123,13 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     if(t != KEM_SUCCESS) return KEM_ERROR;
     t0 = metrics_now();
     t = ks_stage_handshake(&st, ss_eph, 32);
-    if(t != KEM_SUCCESS) t = transcript_get_hash(&tr, th);
-    if(t != KEM_SUCCESS) t = ks_derive_secret(st.hs, "c hs traffic", th, c_hs);
-    if(t != KEM_SUCCESS) t = ks_derive_secret(st.hs, "s hs traffic", th, s_hs);
-    if(t != KEM_SUCCESS) t = record_init(&hs_tx, c_hs);
-    if(t != KEM_SUCCESS) t = record_init(&hs_rx, s_hs);
+    if(t == KEM_SUCCESS) t = transcript_get_hash(&tr, th);
+    if(t == KEM_SUCCESS) t = ks_derive_secret(st.hs, "c hs traffic", th, c_hs);
+    if(t == KEM_SUCCESS) t = ks_derive_secret(st.hs, "s hs traffic", th, s_hs);
+    if(t == KEM_SUCCESS) t = record_init(&hs_tx, c_hs);
+    if(t == KEM_SUCCESS) t = record_init(&hs_rx, s_hs);
     tm->key_schedule_ns += metrics_now() - t0;
-    if(t != KEM_SUCCES) return KEM_ERROR;
+    if(t != KEM_SUCCESS) return KEM_ERROR;
     t = recv_encrypted(fd, &hs_rx, msgbuf, sizeof(msgbuf), &type, &content, &content_len, &tr);
     if(t != KEM_SUCCESS || type != WIRE_ENCRYPTED_EXTENSIONS || content_len != 0) return KEM_ERROR;
     t = recv_encrypted(fd, &hs_rx, msgbuf, sizeof(msgbuf), &type, &content, &content_len, &tr);
@@ -148,10 +148,7 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     t = kem_encaps(auth, server_auth_pk, auth_ct, ss_auth);
     tm->auth_encaps_ns = metrics_now() - t0;
     if(t != KEM_SUCCESS) return KEM_ERROR;
-    t = wire_write(WIRE_CLIENT_AUTH, auth_ct, kem_ct_len(auth), msgbuf, sizeof(msgbuf), &written, stats);
-    if(t != KEM_SUCCESS) return KEM_ERROR;
-    if(transport_send(fd, msgbuf, written) != KEM_SUCCESS) return KEM_ERROR;
-    if(transcript_append(&tr, msgbuf, written) != KEM_SUCCESS) return KEM_ERROR;
+    t = send_encrypted(fd, &hs_tx, WIRE_CLIENT_AUTH, auth_ct, kem_ct_len(auth), &tr, stats)
     t0 = metrics_now();
     t = derive_handshake_secrets(ss_eph, 32, ss_auth, 32, main_secret_out);
     tm->total_ns = metrics_now() - t_start;
