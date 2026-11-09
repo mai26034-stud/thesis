@@ -256,14 +256,8 @@ kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *
     if(t != KEM_SUCCESS) return KEM_ERROR;
     t = send_encrypted(fd, &hs_tx, WIRE_SERVER_AUTH, cred, cred_len, &tr, stats);
     if(t != KEM_SUCCESS) return KEM_ERROR;
-    t = wire_write(WIRE_SERVER_AUTH, cred, cred_len, msgbuf, sizeof(msgbuf), &written, stats);
-    if(t != KEM_SUCCESS) return KEM_ERROR;
-    if(transport_send(fd, msgbuf, written) != KEM_SUCCESS) return KEM_ERROR;
-    if(transcript_append(&tr, msgbuf, written) != KEM_SUCCESS) return KEM_ERROR;
-    t = recv_message(fd, msgbuf, sizeof(msgbuf), &type, &content, &content_len, &total);
-    if(t != KEM_SUCCESS) return KEM_ERROR;
-    if(type != WIRE_CLIENT_AUTH) return KEM_ERROR;
-    if(transcript_append(&tr, msgbuf, total) != KEM_SUCCESS) return KEM_ERROR;
+    t = recv_encrypted(fd, &hs_rx, msgbuf, sizeof(msgbuf), &type, &content, &content_len, &tr);
+    if(t != KEM_SUCCESS || type != WIRE_CLIENT_AUTH || content_len != kem_ct_len(auth)) return KEM_ERROR;
     t0 = metrics_now();
     t = kem_decaps(auth, auth_sk, content, ss_auth);
     tm->auth_decaps_ns = metrics_now() - t0;
