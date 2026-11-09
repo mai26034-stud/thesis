@@ -6,6 +6,7 @@
 #include "wire.h"
 #include "credential.h"
 #include "metrics.h"
+#include "record.h"
 
 #define HS_MAIN_SECRET_LEN 32
 #define EPHEMERAL_KEM "X25519"
