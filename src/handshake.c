@@ -202,7 +202,7 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     return KEM_SUCCESS;
 }
 
-kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *cred, size_t cred_len, const uint8_t *auth_sk, uint8_t *main_secret_out, wire_stats_t *stats, timings_t *tm){
+kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *cred, size_t cred_len, const uint8_t *auth_sk, record_dir_t *app_tx, record_dir_t *app_rx, wire_stats_t *stats, timings_t *tm){
     if(tm == NULL) return KEM_ERROR;
     ks_state_t st;
     uint8_t th[32];
@@ -234,8 +234,8 @@ kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *
     if(t != KEM_SUCCESS) return KEM_ERROR;
     if(type != WIRE_CLIENT_HELLO) return KEM_ERROR;
     if(transcript_append(&tr, msgbuf, total) != KEM_SUCCESS) return KEM_ERROR;
-    t0 = metrics_now();
     if(content_len != kem_pk_len(eph)) return KEM_ERROR;
+    t0 = metrics_now();
     t = kem_encaps(eph, content, eph_ct, ss_eph);
     tm->eph_encaps_ns = metrics_now() - t0;
     if(t != KEM_SUCCESS) return KEM_ERROR;
@@ -243,6 +243,16 @@ kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *
     if(t != KEM_SUCCESS) return KEM_ERROR;
     if(transport_send(fd, msgbuf, written) != KEM_SUCCESS) return KEM_ERROR;
     if(transcript_append(&tr, msgbuf, written) != KEM_SUCCESS) return KEM_ERROR;
+    t0 = metrics_now();
+    t = ks_stage_handshake(&st, ss_eph, 32);
+    if(t == KEM_SUCCESS) t = transcript_get_hash(&tr, th);
+    if(t == KEM_SUCCESS) t = ks_derive_secret(st.hs, "c hs traffic", th, c_hs);
+    if(t == KEM_SUCCESS) t = ks_derive_secret(st.hs, "s hs traffic", th, s_hs);
+    if(t == KEM_SUCCESS) t = record_init(&hs_tx, s_hs);
+    if(t == KEM_SUCCESS) t = record_init(&hs_rx, c_hs);
+    tm->key_schedule_ns += metrics_now() - t0;
+    if(t != KEM_SUCCESS) return KEM_ERROR;
+    t = send_encrypted(fd, &hs_tx);
     t = wire_write(WIRE_SERVER_AUTH, cred, cred_len, msgbuf, sizeof(msgbuf), &written, stats);
     if(t != KEM_SUCCESS) return KEM_ERROR;
     if(transport_send(fd, msgbuf, written) != KEM_SUCCESS) return KEM_ERROR;
