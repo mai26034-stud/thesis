@@ -252,7 +252,10 @@ kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *
     if(t == KEM_SUCCESS) t = record_init(&hs_rx, c_hs);
     tm->key_schedule_ns += metrics_now() - t0;
     if(t != KEM_SUCCESS) return KEM_ERROR;
-    t = send_encrypted(fd, &hs_tx);
+    t = send_encrypted(fd, &hs_tx,  WIRE_ENCRYPTED_EXTENSIONS, NULL, 0, &tr, stats);
+    if(t != KEM_SUCCESS) return KEM_ERROR;
+    t = send_encrypted(fd, &hs_tx, WIRE_SERVER_AUTH, cred, cred_len, &tr, stats);
+    if(t != KEM_SUCCESS) return KEM_ERROR;
     t = wire_write(WIRE_SERVER_AUTH, cred, cred_len, msgbuf, sizeof(msgbuf), &written, stats);
     if(t != KEM_SUCCESS) return KEM_ERROR;
     if(transport_send(fd, msgbuf, written) != KEM_SUCCESS) return KEM_ERROR;
