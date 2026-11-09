@@ -169,8 +169,8 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     if(t == KEM_SUCCESS) t = ks_finished(st.ms, "server finished", th, s_vd);
     tm->key_schedule_ns += metrics_now() - t0;
     if(t != KEM_SUCCESS) return KEM_ERROR;
-    t = recv_encrypted(fd, &ahs_rx, msgbuf, sizeof(msgbuf), &type, &content, &content_len, &tr;
-    if(t != KEM_SUCCESS || type != WIRE_FINISHED || content_len != 32, || !ct_equal(content, s_vd, 32)) return KEM_ERROR;
+    t = recv_encrypted(fd, &ahs_rx, msgbuf, sizeof(msgbuf), &type, &content, &content_len, &tr);
+    if(t != KEM_SUCCESS || type != WIRE_FINISHED || content_len != 32 || !ct_equal(content, s_vd, 32)) return KEM_ERROR;
     t0 = metrics_now();
     t = transcript_get_hash(&tr, th);
     if(t == KEM_SUCCESS) t = ks_derive_secret(st.ms, "s ap traffic", th, s_ap);
