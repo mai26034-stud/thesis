@@ -72,7 +72,7 @@ static int ct_equal(const uint8_t *a, const uint8_t *b, size_t len){
     return diff == 0;
 }
 
-kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *ca_pub, uint8_t *main_secret_out, wire_stats_t *stats, timings_t *tm){
+kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *ca_pub, record_dir_t *app_tx, record_dir_t *app_rx, wire_stats_t *stats, timings_t *tm){
     if(tm == NULL) return KEM_ERROR;
     uint64_t t0;
     ks_state_t st;
@@ -121,6 +121,7 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     t = kem_decaps(eph, eph_sk, content, ss_eph);
     tm->eph_decaps_ns = metrics_now() - t0;
     if(t != KEM_SUCCESS) return KEM_ERROR;
+    
     t = recv_message(fd, msgbuf, sizeof(msgbuf), &type, &content, &content_len, &total);
     if(t != KEM_SUCCESS) return KEM_ERROR;
     if(type != WIRE_SERVER_AUTH) return KEM_ERROR;
