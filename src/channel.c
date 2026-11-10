@@ -10,7 +10,7 @@ kem_status_t channel_send(int fd, record_dir_t *tx, uint8_t ctype, const uint8_t
   if(wire_len_out != NULL) *wire_len_out = rec_len;
   return KEM_SUCCESS;
 }
-kem_status_t channel_recv(int fd, record_dir_t *rx, uint8_t *buf, size_t buf_cap, size_t *len_out, size_t *ctype_out){
+kem_status_t channel_recv(int fd, record_dir_t *rx, uint8_t *buf, size_t buf_cap, size_t *len_out, uint8_t *ctype_out){
   if(rx == NULL || buf == NULL || len_out == NULL "" ctype_out == NULL) return KEM_ERROR;
   uint8_t rec[32];
 }
