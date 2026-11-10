@@ -35,14 +35,13 @@ Randomness: getentropy() of the OS (no OpenSSL RNG).
   --enable-sha3 --enable-hkdf --enable-aesgcm \
   --enable-chacha --enable-poly1305 \
   CFLAGS=-DWOLFSSL_PUBLIC_MP
-Note: with --enable-mlkem, TLS 1.3 negotiates X25519MLKEM768 by default.
-The baseline therefore pins in code (baseline.c, both sides):
+The baseline pins in code (baseline.c, both sides):
   wolfSSL_CTX_set_groups -> WOLFSSL_ECC_X25519
   wolfSSL_CTX_set_cipher_list -> "TLS13-AES128-GCM-SHA256"
 
 ## Configuration decisions
 - WolfSSL 5.9.2 was built with --enable-mlkem, and makes use of X25519MLKEM768 and TLS_AES_256_GCM_SHA384 by default. The classical baseline therefore pins, on both sides, the group X25519 and the cipher suite TLS_AES_128_GCM_SHA256 (which is the mandatory-to-implement suite for RFC 8446 §9.1, which is also used by the AuthKEM record layer). Verified at runtime X25519/TLS13-AES128-GCM-SHA256.
-- liboqs was built without OpenSSL: OQS_USE_OPENSSL, OQS_USE_SHA2_OPENSSL, OQS_USE_AES_OPENSSL, OQS_USE_SHA3_OPENSSL are undefined in oqsconfig.h , and all tests link without -lcrypto.
+- liboqs was built without OpenSSL: OQS_USE_OPENSSL, OQS_USE_SHA2_OPENSSL, OQS_USE_AES_OPENSSL, OQS_USE_SHA3_OPENSSL are undefined in oqsconfig.h, and all tests link without -lcrypto.
 - wolfSSL was built without the --enable-keylog-export option, and thus, no key-log file I/O occurs inside the timed handshake.
 - All reported measurements use the configuration recorded in this file.
 
