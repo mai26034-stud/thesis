@@ -1,6 +1,7 @@
 #include "transport.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
@@ -20,6 +21,11 @@ int transport_client_connect(const char *host, uint16_t port){
         return -1;
     }
     if(connect(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0){
+        close(fd);
+        return -1;
+    }
+    int one = 1;
+    if(setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one)) != 0){
         close(fd);
         return -1;
     }
@@ -50,6 +56,11 @@ int transport_server_accept(uint16_t port){
     int conn_fd = accept(listen_fd, NULL, NULL);
     close(listen_fd);
     if(conn_fd < 0) return -1;
+    int one = 1;
+    if(setsockopt(conn_fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one)) != 0){
+        close(conn_fd);
+        return -1;
+    }
     return conn_fd;
 }
 
