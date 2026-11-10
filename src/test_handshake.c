@@ -47,19 +47,21 @@ static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t
         waitpid(pid, NULL, 0);
         return 1;
     }
-    uint8_t ms[32];
+    record_dir_t app_tx, app_rx;
     wire_stats_t stats;
     wire_stats_init(&stats);
     int ok = 0;
     timings_t tm;
     timings_init(&tm);
-    if(handshake_client(fd, auth_kem_name, ca_pub, ms, &stats, &tm) != KEM_SUCCESS){
+    if(handshake_client(fd, auth_kem_name, ca_pub, &app_tx, &app_rx, &stats, &tm) != KEM_SUCCESS){
         fprintf(stderr, "  The client unfortunately failed :(\n");
         ok = 1;
     } else if(iteration > 0){
         metrics_csv_row(stdout, auth_kem_name, "client", iteration, &tm, &stats);
     }
     transport_close(fd);
+    record_clear(&app_tx);
+    record_clear(&app_rx);
     int status;
     waitpid(pid, &status, 0);
     if(!WIFEXITED(status) || WEXITSTATUS(status) != 0){
