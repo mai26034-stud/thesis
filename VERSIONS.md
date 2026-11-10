@@ -40,11 +40,18 @@ The baseline therefore pins in code (baseline.c, both sides):
   wolfSSL_CTX_set_groups -> WOLFSSL_ECC_X25519
   wolfSSL_CTX_set_cipher_list -> "TLS13-AES128-GCM-SHA256"
 
-## Verifications
-- 2026-10-24, baseline before pinning: TLS13-AES256-GCM-SHA384 / X25519MLKEM768
-- 2026-10-24, baseline after pinning: TLS13-AES128-GCM-SHA256 / X25519
-- 2026-10-24, LIBOQS: OQS_USE_OPENSSL, OQS_USE_SHA2_OPENSSL, OQS_USE_AES_OPENSSL, OQS_USE_SHA3_OPENSSL all undef in oqsconfig.h. All tests pass without -lcrypto.
-- Measurements taken before 2026-10-24 are invalid (baseline used X25519MLKEM768; liboqs used OpenSSL).
-- 2026-10-25, wolfSSL rebuilt without --enable-keylog-export (key log file was written inside the timed handshake).Baseline median total: 1.42ms -> 1.20 ms.
-- 2026-10-31, X25519 shared secret switched o little-endian (RFC 7748); validated against RFC 7748 §6.1 test vector in both directions (test_kem).
-- 2026-10-31, X-Wing combiner checked against Barbosa et al. 2024 (IACR CiC 1(1), definition 8): label first, KeyGen without seed - in agreement with kem_hybrid.c. Later IETF drafts (-05+) move the label last and use seed keys; that was not integrated, since these would not be in accordance with what was stated to be done in this project).
+## Configuration decisions
+- WolfSSL 5.9.2 was built with the command --enable-mlkem, utilises X25519MLKEM768 and TLS_AES_256_GCM_SHA384 by default. The classical baseline therefore, pins on both sides, the group X25519 and the cipher suite TLS_AES_128_GCM_SHA256 (which is the necessary to implement suite for RFC 8446 §9.1, which is also used by the AuthKEM record layer). Was verified at runtimeL X25519/TLS13-AES128-GCM-SHA256.
+- liboqs was built without OpenSSL: OQS_USE_OPENSSL, OQS_USE_SHA2_OPENSSL, OQS_USE_AES_OPENSSL, OQS_USE_SHA3_OPENSSL are undefined in oqsconfig.h , and all tests link without -lcrypto.
+- -wolfSSL was built without the --enable-keylog-export command, and thus, no key-log file I/O operates inside the timed handshake.
+- All reported measurements use the configurations mentioned in this file.
+
+## Specification conformance
+- AuthKEM handshake: draft-celi-wiggers-tls-authkem-06. Revision -07 (May of 2026) is a version bump only, according to its changelog, with the implication being that the implementation applies to both.
+- X-Wing: construction of Barbosa et al. 2024 (IACR CiC 1(1), Definition 8), which is a citation of this paper. The label is first, and the KeyGen is seedless. Later IETF X-Wing drafts (from version -05 and onwards) do place the label last and derive the keys from a seed. These variants were not used for the purposes of this assignment.
+
+## Validation against published test vectors
+- X25519: RFC 7748 §6.1, both directions (test_kem); shared secret in the RFC 7748 little-endian encoding.
+- Key chedule (HKDF-Extract, Derive-Secret, traffic keys, finished key): RFC 8448 §3 (test_ks).
+- Finished verify_data (HMAC-SHA256): RFC 8448 §3, client Finished (test_ks).
+- Record layer (AES-128-GCM, nonce construction, AAD, padding removal): RFC 8448 §3, client Finished record, seal and open; tamper record was rejected (test_record).
