@@ -15,4 +15,13 @@ kem_status_t channel_send(int fd, record_dir_t *tx, uint8_t ctype, const uint8_t
 kem_status_t channel_recv(int fd, record_dir_t *rx, uint8_t *buf, size_t buf_cap, size_t *len_out, uint8_t *ctype_out){
   if(rx == NULL || buf == NULL || len_out == NULL || ctype_out == NULL) return KEM_ERROR;
   uint8_t rec[REC_HDR_LEN + REC_MAX_PLAIN + 256];
+  kem_status_t r = transport_recv(fd, rec, REC_HDR_LEN);
+  if(r != KEM_SUCCESS) return KEM_ERROR;
+  size_t body = ((size_t)rec[3] << 8) | rec[4];
+  if(REC_HDR_LEN + body > sizeof(rec)) return KEM_ERROR;
+  r = transport_recv(fd, rec + REC_HDR_LEN, body);
+  if(r != KEM_SUCCESS) return KEM_ERROR;
+  r = record_open(rx, rec, REC_HDR_LEN + body, buf, buf_cap, len_out, ctype_out);
+  if(r != KEM_SUCCESS) return KEM_ERROR;
+  return KEM_SUCCESS;
 }
