@@ -19,12 +19,12 @@ static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t
     if(pid == 0){
         int fd = transport_server_accept(port);
         if(fd < 0) exit(1);
-        uint8_t ms[32];
+        record_dir_t app_tx, app_rx;
         wire_stats_t stats;
         wire_stats_init(&stats);
         timings_t tm;
         timings_init(&tm);
-        kem_status_t r = handshake_server(fd, auth_kem_name, cred, cred_len, srv_sk, ms, &stats, &tm);
+        kem_status_t r = handshake_server(fd, auth_kem_name, cred, cred_len, srv_sk, &app_tx, &app_rx, &stats, &tm);
         if(r != KEM_SUCCESS){
             fprintf(stderr, "Server unfortunately failed :(\n");
             transport_close(fd);
@@ -33,6 +33,8 @@ static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t
         if(iteration > 0) metrics_csv_row(stdout, auth_kem_name, "server", iteration, &tm, &stats);
         transport_close(fd);
         fflush(stdout);
+        record_clear(&app_tx);
+        record_clear(&app_rx);
         exit(0);
     }
 
