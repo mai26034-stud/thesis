@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from scipy import stats
 
 df1 = pd.read_csv("../src/results.csv")
 df2 = pd.read_csv("../src/baseline.csv")
@@ -10,7 +11,7 @@ def ci95(s):
     n = len(s)
     if n < 2:
         return 0.0
-    return 1.96 * s.std(ddof=1)/np.sqrt(n)
+    return stats.t.ppf(0.975, n - 1) * s.std(ddof=1)/np.sqrt(n)
 
 med = df.groupby(["config", "role"])[time_cols].median()
 mean = df.groupby(["config", "role"])[time_cols].mean()
