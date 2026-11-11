@@ -106,8 +106,8 @@ static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t
 }
 
 static int run_handshake(const char *auth_kem_name, uint16_t port){
-    uint8_t ca_pub[ED25519_PUB_LEN];
-    uint8_t ca_priv[ED25519_PRIV_LEN];
+    uint8_t ca_pub[CA_PUB_LEN];
+    uint8_t ca_priv[CA_PRIV_LEN];
     if(ca_keygen(ca_pub, ca_priv) != KEM_SUCCESS) return 1;
     kem_t *auth = kem_open(auth_kem_name);
     if(auth == NULL) return 1;
@@ -117,7 +117,7 @@ static int run_handshake(const char *auth_kem_name, uint16_t port){
     uint8_t cred[16384];
     size_t cred_len;
     const uint8_t identity[] = "test-server";
-    if(credential_create(identity, 11, srv_pk, kem_pk_len(auth), ca_priv, cred, sizeof(cred), &cred_len) != KEM_SUCCESS) return 1;
+    if(credential_create(identity, 11, srv_pk, kem_pk_len(auth), ca_priv, ca_pub, cred, sizeof(cred), &cred_len) != KEM_SUCCESS) return 1;
     kem_close(auth);
     int failures = 0;
     for(int i = 0; i <WARMUP + ITERATIONS; i++){
