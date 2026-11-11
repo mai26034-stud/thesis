@@ -26,7 +26,7 @@ static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t
         timings_init(&tm);
         kem_status_t r = handshake_server(fd, auth_kem_name, cred, cred_len, srv_sk, &app_tx, &app_rx, &stats, &tm);
         if(r != KEM_SUCCESS){
-            fprintf(stderr, "Server unfortunately failed :(\n");
+            fprintf(stderr, "Server unfortunately failed..\n");
             transport_close(fd);
             exit(1);
         }
@@ -54,7 +54,7 @@ static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t
     timings_t tm;
     timings_init(&tm);
     if(handshake_client(fd, auth_kem_name, ca_pub, &app_tx, &app_rx, &stats, &tm) != KEM_SUCCESS){
-        fprintf(stderr, "  The client unfortunately failed :(\n");
+        fprintf(stderr, "  The client unfortunately failed..\n");
         ok = 1;
     } else if(iteration > 0){
         metrics_csv_row(stdout, auth_kem_name, "client", iteration, &tm, &stats);
@@ -65,7 +65,7 @@ static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t
     int status;
     waitpid(pid, &status, 0);
     if(!WIFEXITED(status) || WEXITSTATUS(status) != 0){
-        fprintf(stderr, "The server regretably failed :(\n");
+        fprintf(stderr, "The server regretably failed..\n");
         ok = 1;
     }
     return ok;
