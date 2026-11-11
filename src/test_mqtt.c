@@ -10,7 +10,7 @@ struct rl_case{
 
 static int check(const char *name, const uint8_t *got, size_t got_n, const uint8_t *exp, size_t exp_n){
     if(got_n != exp_n || memcmp(got, exp, exp_n) != 0){
-        printf("FAIL: %s\n", name);
+        printf("[mqtt] FAIL: %s\n", name);
         return 1;
     }
     else printf("[mqtt] OK: %s\n", name);
