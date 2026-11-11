@@ -65,13 +65,14 @@ static int run_roundtrip(const char *name){
     uint8_t *ss2 = malloc(kem_ss_len(k));
     
     if(pk == NULL || sk == NULL || ct == NULL || ss1 == NULL || ss2 == NULL){
-             free(pk);
-             free(sk);
-             free(ct);
-             free(ss1);
-             free(ss2);
-             printf("[X-Wing] TAMPER TEST FAILED: malloc\n");
-             return 1;
+        free(pk);
+        free(sk);
+        free(ct);
+        free(ss1);
+        free(ss2);
+        kem_close();
+        printf("[X-Wing] TAMPER TEST FAILED: malloc\n");
+        return 1;
     }
 
     kem_status_t r1 = kem_keypair(k, pk, sk);
@@ -120,7 +121,16 @@ static int run_tamper_test(void){
     uint8_t *ss1 = malloc(kem_ss_len(k));
     uint8_t *ss2 = malloc(kem_ss_len(k));
 
-    if(pk == NULL || sk == NULL || ct == NULL || ss1 == NULL || ss2 == NULL) return 1;
+    if(pk == NULL || sk == NULL || ct == NULL || ss1 == NULL || ss2 == NULL){
+        free(pk);
+        free(sk);
+        free(ct);
+        free(ss1);
+        free(ss2);
+        kem_close();
+        printf("[X-Wing] TAMPER TEST FAILED: malloc\n");
+        return 1;
+    }
     kem_keypair(k, pk, sk);
     kem_encaps(k, pk, ct, ss1);
 
