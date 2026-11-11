@@ -9,8 +9,31 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include "metrics.h"
+#include "channel.h"
 #define WARMUP 3
 #define ITERATIONS 30
+
+static int ping_client(int fd, record_dir_t *tx, record_dir_t *rx){
+    const uint8_t ping[4] = {'p','i','n','g'};
+    uint8_t buf[64];
+    size_t n;
+    uint8_t ct;
+    if(channel_send(fd, tx, REC_TYPE_APPDATA, ping, 4, NULL) != KEM_SUCCESS) return 1;
+    if(channel_recv(fd, rx, buf, sizeof(buf), &n, &ct) != KEM_SUCCESS) return 1;
+    if(ct != REC_TYPE_DATA || n != 4 || memcmp(buf, "pong", 4) != 0) return 1;
+    return 0;
+}
+
+static int ping_server(int fd, record_dir_t *tx, record_dir_t *rx){
+    const uint8_t ping[4] = {'p','i','n','g'};
+    uint8_t buf[64];
+    size_t n;
+    uint8_t ct;
+    if(channel_recv(fd, rx, buf, sizeof(buf), &n, &ct) != KEM_SUCCESS) return 1;
+    if(channel_send(fd, tx, REC_TYPE_APPDATA, ping, 4, NULL) != KEM_SUCCESS) return 1;
+    if(ct != REC_TYPE_DATA || n != 4 || memcmp(buf, "pong", 4) != 0) return 1;
+    return 0;
+}
 
 static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t *ca_pub, const uint8_t *cred, size_t cred_len, const uint8_t *srv_sk, int iteration){
     fflush(stdout);
