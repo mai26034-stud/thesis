@@ -1,15 +1,18 @@
-#include <wolfssl/options.h>
-#include <wolfssl/wolfcrypt/ed25519.h>
-#include <wolfssl/wolfcrypt/random.h>
-#include <wolfssl/wolfcrypt/memory.h>
 #include "credential.h"
+#include <wolfssl/options.h>
+#include <wolfssl/wolfcrypt/ecc.h>
+#include <wolfssl/wolfcrypt/random.h>
+#include <wolfssl/wolfcrypt/sha256.h>
+#include <wolfssl/wolfcrypt/memory.h>
 #include <string.h>
+#include <wolfssl/wolfcrypt/hash.h>
 
-kem_status_t credential_create(const uint8_t *identity, size_t identity_len, const uint8_t *kem_pk, size_t kem_pk_len, const uint8_t *ca_priv, uint8_t *out, size_t out_cap, size_t *written){
-    uint8_t pub[ED25519_PUB_LEN];
-    if(identity == NULL || kem_pk == NULL || ca_priv == NULL || out == NULL || written == NULL) return KEM_ERROR;
-    if(identity_len > CRED_MAX_IDENTITY || kem_pk_len > CRED_MAX_KEM_PK) return KEM_ERROR;
-    if(2 + identity_len + 2 + kem_pk_len + ED25519_SIG_LEN > out_cap) return KEM_ERROR;
+kem_status_t credential_create(const uint8_t *identity, size_t identity_len, const uint8_t *kem_pk, size_t kem_pk_len, const uint8_t *ca_priv, const uint8_t *ca_pub, uint8_t *out, size_t out_cap, size_t *written){
+    if(identity == NULL || kem_pk == NULL || ca_priv == NULL || ca_pub == NULL || out == NULL || written == NULL) return KEM_ERROR;
+    if(identity_len > CRED_MAX_IDENTITY || identity_len == 0) return KEM_ERROR;
+    if(kem_pk_len == 0 || kem_pk_len > CRED_MAX_KEM_PK) return KEM_ERROR;
+    size_t tbs_len = 2 + identity_len + 2 + kem_pk_len;
+    if(out_cap < tbs_len + 2 + CA_SIG_MAX) return KEM_ERROR;
     size_t pos = 0;
     out[pos++] = (uint8_t)(identity_len >> 8);
     out[pos++] = (uint8_t)(identity_len & 0xFF);
@@ -19,86 +22,84 @@ kem_status_t credential_create(const uint8_t *identity, size_t identity_len, con
     out[pos++] = (uint8_t)(kem_pk_len & 0xFF);
     memcpy(out + pos, kem_pk, kem_pk_len);
     pos += kem_pk_len;
-    ed25519_key key;
-    if(wc_ed25519_init(&key) != 0) return KEM_ERROR;
-    if(wc_ed25519_import_private_only(ca_priv, 32, &key) != 0){
-        wc_ed25519_free(&key);
+    uint8_t digest[32];
+    if(wc_Sha256Hash(out, (word32)tbs_len, digest) != 0) return KEM_ERROR;
+    WC_RNG rng;
+    ecc_key key;
+    uint8_t sig[CA_SIG_MAX];
+    word32 sig_len = CA_SIG_MAX;
+    if(wc_InitRng(&rng) != 0) return KEM_ERROR;
+    if(wc_ecc_init(&key) != 0){
+        wc_FreeRng(&rng);
         return KEM_ERROR;
     }
-    if(wc_ed25519_make_public(&key, pub, ED25519_PUB_LEN) != 0){
-        wc_ed25519_free(&key);
-        return KEM_ERROR;
-    }
-    if(wc_ed25519_import_private_key(ca_priv, ED25519_PRIV_LEN, pub, ED25519_PUB_LEN, &key) != 0){
-        wc_ed25519_free(&key);
-        return KEM_ERROR;
-    }
-    word32 siglen = ED25519_SIG_LEN;
-    if(wc_ed25519_sign_msg(out, (word32)pos, out + pos, &siglen, &key) != 0){
-        wc_ed25519_free(&key);
-        return KEM_ERROR;
-    }
-    *written = pos + ED25519_SIG_LEN;
-    wc_ed25519_free(&key);
+    int ret = wc_ecc_import_private_key(ca_priv, CA_PRIV_LEN, ca_pub, CA_PUB_LEN, &key);
+    if(ret == 0) ret = wc_ecc_sign_hash(digest, 32, sig, &sig_len, &rng, &key);
+    wc_ecc_free(&key);
+    wc_FreeRng(&rng);
+    if(ret != 0 || sig_len == 0 || sig_len > CA_SIG_MAX) return KEM_ERROR;
+    out[pos++] = (uint8_t)(sig_len >> 8);
+    out[pos++] = (uint8_t)(sig_len & 0xFF);
+    memcpy(out + pos, sig, sig_len);
+    pos += sig_len;
+    *written = pos;
     return KEM_SUCCESS;
 }
 
 kem_status_t ca_keygen(uint8_t *ca_pub, uint8_t *ca_priv){
     if(ca_pub == NULL || ca_priv == NULL) return KEM_ERROR;
     WC_RNG rng;
-    ed25519_key key;
+    ecc_key key;
+    word32 pub_len = CA_PUB_LEN;
+    word32 priv_len = CA_PRIV_LEN;
     if(wc_InitRng(&rng) != 0) return KEM_ERROR;
-    if(wc_ed25519_init(&key) != 0){
-        wc_FreeRng(&rng);
-         return KEM_ERROR;
-    }
-    if(wc_ed25519_make_key(&rng, 32, &key) != 0){
-        wc_ed25519_free(&key);
+    if(wc_ecc_init(&key) != 0){
         wc_FreeRng(&rng);
         return KEM_ERROR;
     }
-    word32 publen = ED25519_PUB_LEN;
-    if(wc_ed25519_export_public(&key, ca_pub, &publen) != 0){
-        wc_ed25519_free(&key);
-        wc_FreeRng(&rng);
-        return KEM_ERROR;
-    }
-    word32 privlen = ED25519_PRIV_LEN;
-    if(wc_ed25519_export_private_only(&key, ca_priv, &privlen) != 0){
-        wc_ed25519_free(&key);
-        wc_FreeRng(&rng);
-        return KEM_ERROR;
-    }
-    wc_ed25519_free(&key);
+    int ret = wc_ecc_make_key_ex(&rng, 32, &key, ECC_SECP256R1);
+    if(ret == 0) ret = wc_ecc_export_x963(&key, ca_pub, &pub_len);
+    if(ret == 0) ret = wc_ecc_export_private_only(&key, ca_priv, &priv_len);
+    if(ret == 0 && (pub_len != CA_PUB_LEN || priv_len != CA_PRIV_LEN)) ret = -1;
+    wc_ecc_free(&key);
     wc_FreeRng(&rng);
+    if(ret != 0){
+        wc_ForceZero(ca_priv, CA_PRIV_LEN);
+        return KEM_ERROR;
+    }
     return KEM_SUCCESS;
 }
 
 kem_status_t credential_verify(const uint8_t *cred, size_t cred_len, const uint8_t *ca_pub, const uint8_t **kem_pk_out, size_t *kem_pk_len_out){
     if(cred == NULL || ca_pub == NULL || kem_pk_out == NULL || kem_pk_len_out == NULL) return KEM_ERROR;
-    if(cred_len < 68) return KEM_ERROR;
-    size_t identity_len = ((size_t)cred[0] <<8) | (size_t)cred[1];
-    size_t pos = 2 + identity_len;
-    if(pos + 2 > cred_len) return KEM_ERROR;
-    size_t kem_pk_len = ((size_t)cred[pos] <<8) | (size_t)cred[pos + 1];
+    if(cred_len < 2) return KEM_ERROR;
+    size_t pos = 0;
+    size_t identity_len = ((size_t)cred[0] << 8) | cred[1];
     pos += 2;
+    if(identity_len == 0 || identity_len > CRED_MAX_IDENTITY || identity_len > cred_len - pos) return KEM_ERROR;
+    pos += identity_len;
+    if(cred_len - pos < 2) return KEM_ERROR;
+    size_t kem_pk_len = ((size_t)cred[pos] << 8) | cred[pos + 1];
+    pos += 2;
+    if(kem_pk_len == 0 || kem_pk_len > CRED_MAX_KEM_PK || kem_pk_len > cred_len - pos) return KEM_ERROR;
     const uint8_t *kem_pk = cred + pos;
     pos += kem_pk_len;
-    if(pos + ED25519_SIG_LEN > cred_len) return KEM_ERROR;
-    ed25519_key key;
-    if(wc_ed25519_init(&key) != 0) return KEM_ERROR;
-    if(wc_ed25519_import_public(ca_pub, ED25519_PUB_LEN, &key) != 0){
-        wc_ed25519_free(&key);
-        return KEM_ERROR;
-    }
+    size_t tbs_len = pos;
+    if(cred_len - pos < 2) return KEM_ERROR;
+    size_t sig_len = ((size_t)cred[pos] << 8) | cred[pos + 1];
+    pos += 2;
+    if(sig_len == 0 || sig_len > CA_SIG_MAX || sig_len != cred_len - pos) return KEM_ERROR;
+    const uint8_t *sig = cred + pos;
+    uint8_t digest[32];
+    if(wc_Sha256Hash(cred, (word32)tbs_len, digest) != 0) return KEM_ERROR;
+    ecc_key key;
+    if(wc_ecc_init(&key) != 0) return KEM_ERROR;
     int res = 0;
-    int rc = wc_ed25519_verify_msg(cred + pos, ED25519_SIG_LEN, cred, (word32)pos, &res, &key);
-    if(rc != 0 || res != 1){
-        wc_ed25519_free(&key);
-        return KEM_ERROR;
-    }
+    int ret = wc_ecc_import_x963(ca_pub, CA_PUB_LEN, &key);
+    if(ret == 0) ret = wc_ecc_verify_hash(sig, (word32)sig_len, digest, 32, &res, &key);
+    wc_ecc_free(&key);
+    if(ret != 0 || res != 1) return KEM_ERROR;
     *kem_pk_out = kem_pk;
     *kem_pk_len_out = kem_pk_len;
-    wc_ed25519_free(&key);
     return KEM_SUCCESS;
 }
