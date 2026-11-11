@@ -5,9 +5,9 @@
 #include <stddef.h>
 #include "kem.h"
 
-#define ED25519_PUB_LEN 32
+#define ED25519_PUB_LEN 65
 #define ED25519_PRIV_LEN 32
-#define ED25519_SIG_LEN 64
+#define ED25519_SIG_LEN 72
 #define CRED_MAX_IDENTITY 64
 #define CRED_MAX_KEM_PK 4608
 
