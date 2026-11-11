@@ -4,6 +4,8 @@
 - Mosquitto: 2.0.18 (Ubuntu 24.04 package), default config (localhost only)
 - Compiler: gcc 13.3.0
 - Build flags: -Wall -O2 (Makefile)
+- Analysis: Python 3.12.3, pandas 2.1.4, numpy 1.26.4, scipy 1.11.4
+- Development machine: Intel core i5-10400, Ubuntu 24.04 on WSL2
 
 ## KEM sizes (bytes)
 - HQC-3  (KEM_hqc_3):    pk 4514, sk 4602, ct 8978, ss 32
@@ -48,6 +50,7 @@ The baseline pins in code (baseline.c, both sides):
 - liboqs was built without OpenSSL: OQS_USE_OPENSSL, OQS_USE_SHA2_OPENSSL, OQS_USE_AES_OPENSSL, OQS_USE_SHA3_OPENSSL are undefined in oqsconfig.h, and all tests link without -lcrypto.
 - wolfSSL was built without the --enable-keylog-export option, and thus, no key-log file I/O occurs inside the timed handshake.
 - All reported measurements use the configuration recorded in this file.
+- TCP_NODELAY is set on every connection (AuthKEM and baseline), so that Nagle's algorithm combined with delayed ACKs does not add latency to flights of consecutive messages.
 
 ## Specification conformance
 - AuthKEM handshake: draft-celi-wiggers-tls-authkem-06. Revision -07 (May of 2026) is a version bump only, according to its changelog, with the implication being that the implementation applies to both.
@@ -58,3 +61,9 @@ The baseline pins in code (baseline.c, both sides):
 - Key schedule (HKDF-Extract, Derive-Secret, traffic keys, finished key): RFC 8448 §3 (test_ks).
 - Finished verify_data (HMAC-SHA256): RFC 8448 §3, client Finished (test_ks).
 - Record layer (AES-128-GCM, nonce construction, AAD, padding removal): RFC 8448 §3, client Finished record, seal and open; a tampered record was rejected (test_record).
+
+## KEM implementations (liboqs 0.16.0, default build, OQS_DIST_BUILD)
+- ML-KEM-768: optimized x86_64 implementation enabled (OQS_ENABLE_KEM_ml_kem_768_x86_64).
+- HQC-3: portable C implementation only; liboqs 0.16.0 provides no optimized variant.
+- liboqs speed_kem on the development machine: HQC-3 keygen 5.0 ms, encaps 10.2 ms, decaps 15.1 ms; ML-KEM-768 keygen 10.9 μs, encaps 11.1 μs, decaps 13.8 μs.
+- The Raspberry Pi build is recorded separately.
