@@ -165,7 +165,7 @@ static int run_x25519_rfc7748(){
         printf("[X25519] RFC 7748 FAILED: wrong K (Bob)\n");
         ok = 1;
     }
-    if(ok == 0) printf("[X25519] RFC 7748 run successfully\n");
+    if(ok == 0) printf("[X25519] RFC 7748 OK\n");
     kem_close(k);
     return ok;
 }
