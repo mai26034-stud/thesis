@@ -142,7 +142,7 @@ static int test_transcript_on_determinism(){
 
     if(memcmp(h1, h2, 32) == 0) return 0;
     else{
-        printf("[transcript-cumulativity] FAIL\n");
+        printf("[transcript-determinism] FAIL\n");
         return 1;
     }
 }
@@ -167,7 +167,7 @@ static int test_transcript_on_sensitivity(){
 
     if(memcmp(h1, h2, 32) != 0) return 0;
     else{
-        printf("[determinism-sensitivity] FAIL\n");
+        printf("[transcript-sensitivity] FAIL\n");
         return 1;
     }
 }
