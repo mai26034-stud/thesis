@@ -26,7 +26,7 @@ static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t
         timings_init(&tm);
         kem_status_t r = handshake_server(fd, auth_kem_name, cred, cred_len, srv_sk, &app_tx, &app_rx, &stats, &tm);
         if(r != KEM_SUCCESS){
-            fprintf(stderr, "[%s] Client handshake failed.\n", auth_kem_name);
+            fprintf(stderr, "[%s] Server handshake failed.\n", auth_kem_name);
             transport_close(fd);
             exit(1);
         }
@@ -54,7 +54,7 @@ static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t
     timings_t tm;
     timings_init(&tm);
     if(handshake_client(fd, auth_kem_name, ca_pub, &app_tx, &app_rx, &stats, &tm) != KEM_SUCCESS){
-        fprintf(stderr, "[%s] Server handshake failed.\n", auth_kem_name);
+        fprintf(stderr, "[%s] Client handshake failed.\n", auth_kem_name);
         ok = 1;
     } else if(iteration > 0){
         metrics_csv_row(stdout, auth_kem_name, "client", iteration, &tm, &stats);
