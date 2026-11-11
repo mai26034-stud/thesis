@@ -92,7 +92,7 @@ static int run_roundtrip(const char *name){
     if(memcmp(ss1, ss2, kem_ss_len(k)) == 0){
         printf("[%s] ROUNDTRIP OK.\n", name);
     } else{
-        printf("[%s] ROUNDTRIP FAILED: The shared secrets differ..\n", name);
+        printf("[%s] ROUNDTRIP FAILED: The shared secrets differ.\n", name);
         return 1;
     }
     free(pk);
@@ -126,7 +126,7 @@ static int run_tamper_test(void){
         printf("[X-Wing] TAMPER TEST OK.\n");
         ok = 0;
     }else{
-        printf("[X-Wing] TAMPER TEST FAILED: shared secret remained unchanged..\n");
+        printf("[X-Wing] TAMPER TEST FAILED: shared secret remained unchanged.\n");
         ok = 1;
     }
     free(pk);
