@@ -1,6 +1,5 @@
 #include "wire.h"
 #include <string.h>
-#include <stdio.h>
 
 void wire_stats_init(wire_stats_t *stats){
    if(stats == NULL) return;
