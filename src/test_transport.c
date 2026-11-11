@@ -32,9 +32,9 @@ int main(void){
      transport_close(fd);
      waitpid(pid, NULL, 0);
      if(memcmp(payload, echoed, TEST_SIZE) == 0){
-          printf("[TRANSPORT] WORKS AS IT WAS INTENDED TO. %d bytes echoed intact :)\n", TEST_SIZE);
+          printf("[TRANSPORT] OK. %d bytes echoed intact.\n", TEST_SIZE);
           return 0;
      }
-     printf("[TRANSPORT] FAILED: There were echo mismatches :(\n");
+     printf("[TRANSPORT] FAILED: echo mismatches.\n");
      return 1;
 }
