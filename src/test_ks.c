@@ -140,11 +140,11 @@ static int test_transcript_on_determinism(){
     transcript_get_hash(&t1, h1);
     transcript_get_hash(&t2, h2);
 
-    if(memcmp(h1, h2, 32) == 0){
+    if(memcmp(h1, h2, 32) == 0) return 0;
+    else{
         printf("[determinism-cumulativity] FAIL\n");
-        return 0;
+        return 1;
     }
-    else return 1;
 }
 
 static int test_transcript_on_sensitivity(){
@@ -165,11 +165,11 @@ static int test_transcript_on_sensitivity(){
     transcript_get_hash(&t1, h1);
     transcript_get_hash(&t2, h2);
 
-    if(memcmp(h1, h2, 32) != 0){
-        printf("[transcript-sensitivity] FAIL\n");
-        return 0;
+    if(memcmp(h1, h2, 32) != 0) return 0;
+    else{
+        printf("[determinism-sensitivity] FAIL\n");
+        return 1;
     }
-    else return 1;
 }
 
 static int test_transcript_on_cumulativity(){
@@ -194,11 +194,11 @@ static int test_transcript_on_cumulativity(){
     transcript_get_hash(&t1, h1);
     transcript_get_hash(&t2, h2);
 
-    if(memcmp(h1, h2, 32) == 0){
+    if(memcmp(h1, h2, 32) == 0) return 0;
+    else{
         printf("[transcript-cumulativity] FAIL\n");
-        return 0;
+        return 1;
     }
-    else return 1;
 }
 
 static int test_ks_deterministic(){
