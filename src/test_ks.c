@@ -211,7 +211,10 @@ static int test_ks_deterministic(){
     derive_handshake_secrets(ss_eph, 32, ss_auth, 32, ms1);
     derive_handshake_secrets(ss_eph, 32, ss_auth, 32, ms2);
     if(memcmp(ms1, ms2, 32) == 0) return 0;
-    else return 1;
+    else{
+        printf("[ks-det] FAIL\n")
+        return 1;
+    }
 }
 
 static int test_ks_sensitive(){
@@ -276,6 +279,7 @@ static int test_rfc8448(void){
     failures += ks_check("8 server iv", r, iv, rfc_s_iv, 12);
     r = ks_expand_label(s, "finished", NULL, 0, fin, 32);
     failures += ks_check("9 server finished key", r, fin, rfc_s_fin, 32);
+    transcript_free(&te);
     if(failures == 0) printf("[RFC 8448] key schedule is OK\n");
     return failures;
 }
@@ -324,6 +328,7 @@ static int test_stage_chain(void){
     failures += ks_check("chain ahs", KEM_SUCCESS, st.ahs, ahs, 32);
     failures += ks_check("chain ms", KEM_SUCCESS, st.ms, ms, 32);
     ks_state_clear(&st);
+    transcript_free(&te);
     if(failures == 0) printf("[stage-chain] OK\n");
     return failures;
 }
