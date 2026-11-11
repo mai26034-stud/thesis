@@ -140,9 +140,15 @@ static int test_transcript_on_determinism(){
     transcript_get_hash(&t1, h1);
     transcript_get_hash(&t2, h2);
 
-    if(memcmp(h1, h2, 32) == 0) return 0;
+    if(memcmp(h1, h2, 32) == 0){
+        transcript_free(&t1);
+        transcript_free(&t2);
+        return 0;
+    }
     else{
         printf("[transcript-determinism] FAIL\n");
+        transcript_free(&t1);
+        transcript_free(&t2);
         return 1;
     }
 }
@@ -165,9 +171,15 @@ static int test_transcript_on_sensitivity(){
     transcript_get_hash(&t1, h1);
     transcript_get_hash(&t2, h2);
 
-    if(memcmp(h1, h2, 32) != 0) return 0;
+    if(memcmp(h1, h2, 32) != 0){
+        transcript_free(&t1);
+        transcript_free(&t2);
+        return 0;
+    }
     else{
         printf("[transcript-sensitivity] FAIL\n");
+        transcript_free(&t1);
+        transcript_free(&t2);
         return 1;
     }
 }
@@ -194,9 +206,15 @@ static int test_transcript_on_cumulativity(){
     transcript_get_hash(&t1, h1);
     transcript_get_hash(&t2, h2);
 
-    if(memcmp(h1, h2, 32) == 0) return 0;
+    if(memcmp(h1, h2, 32) == 0){
+        transcript_free(&t1);
+        transcript_free(&t2);
+        return 0;
+    }
     else{
         printf("[transcript-cumulativity] FAIL\n");
+        transcript_free(&t1);
+        transcript_free(&t2);
         return 1;
     }
 }
@@ -212,7 +230,7 @@ static int test_ks_deterministic(){
     derive_handshake_secrets(ss_eph, 32, ss_auth, 32, ms2);
     if(memcmp(ms1, ms2, 32) == 0) return 0;
     else{
-        printf("[ks-det] FAIL\n")
+        printf("[ks-det] FAIL\n");
         return 1;
     }
 }
