@@ -89,6 +89,6 @@ static int test_wire_sequential(void){
         printf("[wire-seq] OK\n");
         return 0;
     }
-    printf("[wire-seq] FAILED: 2nd message missmatch.");
+    printf("[wire-seq] FAILED: 2nd message mismatch.\n");
     return 1;
 }
