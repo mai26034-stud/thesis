@@ -7,7 +7,7 @@
 int main(void){
     int fd = transport_client_connect("127.0.0.1", 1883);
     if(fd < 0){
-        printf("fd failed\n");
+        printf("fd failed..\n");
         return 1;
     }
     uint8_t buf[256];
@@ -16,31 +16,31 @@ int main(void){
     uint16_t pid = 0;
     kem_status_t r = mqtt_build_connect("D001-pub", 60, buf, sizeof(buf), &n);
     if(r != KEM_SUCCESS){
-        printf("building a connection has regretably failed :(\n");
+        printf("building a connection has regretably failed..\n");
         transport_close(fd);
         return 1;
     }
     r = transport_send(fd, buf, n);
     if(r != KEM_SUCCESS){
-        printf("sending was unsuccessful :(\n");
+        printf("sending was unsuccessful..\n");
         transport_close(fd);
         return 1;
     }
     uint8_t resp[4];
     r = transport_recv(fd, resp, 4);
     if(r != KEM_SUCCESS){
-        printf("recieving failed :(\n");
+        printf("recieving failed..\n");
         transport_close(fd);
         return 1;
     }
     r = mqtt_parse_connack(resp, 4, &rc);
     if(r != KEM_SUCCESS){
-        printf("parse connack failed :(\n");
+        printf("parse connack failed..\n");
         transport_close(fd);
         return 1;
     }
     if(rc != 0){
-        printf("%d failed :(\n", rc);
+        printf("%d failed..\n", rc);
         transport_close(fd);
         return 1;
     }
@@ -86,11 +86,11 @@ int main(void){
     }
     r = transport_send(fd, buf, n);
     if(r != KEM_SUCCESS){
-        printf("sending failed :(\n");
+        printf("sending failed...\n");
         transport_close(fd);
         return 1;
     }
     transport_close(fd);
-    printf("ALL IS OK :)\n");
+    printf("ALL IS OK...\n");
     return 0;
 }
