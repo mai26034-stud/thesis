@@ -67,3 +67,27 @@ Dependencies (liboqs 0.16.0, wolfSSL 5.9.2) are built from source into "vendor/i
 cd src
 make
 ```
+## Tests
+
+| TEST | What it checks |
+|---|---|
+| `./test_kem` | KEM round trips for all configurations; X25519 against RFC 7748 §6.1; X-Wing tamper test |
+| `./test_ks` | Transcript hash; key schedule, traffic keys and Finished against RFC 8448 §3 |
+| `./test_record` | Record protection against RFC 8448 §3 (seal and open); tampered record rejected |
+| `./test_wire` | Message framing |
+| `./test_transport` | TCP transport |
+| `./test_mqtt` | MQTT packet encoding and parsing |
+| `./mqtt_smoke` | CONNECT / PUBLISH / PUBACK / DISCONNECT against Mosquitto on localhost:1883 |
+
+Each test prints its result and exits with the number of failures (0 failures for success).
+
+## Measurements
+
+```
+cd src
+./test|_handshake > results.csv
+./test|_baseline > baseline.csv
+cd ../analysis
+python analyze.py
+```
+
