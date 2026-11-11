@@ -3,9 +3,10 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "kem.h"
+#include <wolfssl/options.h>
+#include <wolfssl/wolfcrypt/sha256.h>
 typedef struct{
-     uint8_t buffer[32768];
-     size_t len;
+     wc_Sha256 sha;
 } transcript_t;
 kem_status_t transcript_init(transcript_t *t);
 kem_status_t transcript_append(transcript_t *t, const uint8_t *msg, size_t msg_len);
