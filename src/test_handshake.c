@@ -25,7 +25,7 @@ static int ping_client(int fd, record_dir_t *tx, record_dir_t *rx){
 }
 
 static int ping_server(int fd, record_dir_t *tx, record_dir_t *rx){
-    const uint8_t ping[4] = {'p','o','n','g'};
+    const uint8_t pong[4] = {'p','o','n','g'};
     uint8_t buf[64];
     size_t n;
     uint8_t ct;
