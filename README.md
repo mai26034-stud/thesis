@@ -33,3 +33,28 @@ ClientHello (ephemeral pk)          ------->
 - Record protection: TLS 1.3 record layer with AES-128-GCM (TLS_AES_128_GCM_SHA256), the same cipher suite pinned in the baseline.
 
 ## Repository layout
+
+```
+src/
+  kem.c, kem.h            common KEM interface
+  kem_oqs.c               ML-KEM-768 and HQC-3 (liboqs)
+  kem_x25519.c            X25519 as a KEM (wolfCrypt)
+  kem_hybrid.c            X-Wing combiner
+  transcript.c            handshake transcript hash
+  keyschedule.c           HKDF-based key schedule, traffic keys, Finished
+  record.c                TLS 1.3 record protection (AES-128-GCM)
+  channel.c               record-protected send/receive over a socket
+  wire.c                  message framing
+  credential.c            CA-signed server credential
+  handshake.c             AuthKEM client and server handshake
+  transport.c             TCP transport
+  metrics.c               timing and byte counters, CSV output
+  baseline.c              classical TLS 1.3 baseline (wolfSSL)
+  mqtt.c                  MQTT 3.1.1 packet encoding and parsing
+  test_*.c                unit and integration tests
+  mqtt_smoke.c            end-to-end check against a local Mosquitto broker
+analysis/
+  analyze.py              summary of statistics (median, mean, 95% CI, bytes)
+certs/                    tests certificates for the baseline
+VERSIONS.md               exact versions of libraries, build commands, and the verification log
+```
