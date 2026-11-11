@@ -31,7 +31,7 @@ static int ping_server(int fd, record_dir_t *tx, record_dir_t *rx){
     uint8_t ct;
     if(channel_recv(fd, rx, buf, sizeof(buf), &n, &ct) != KEM_SUCCESS) return 1;
     if(ct != REC_TYPE_APPDATA || n != 4 || memcmp(buf, "ping", 4) != 0) return 1;
-    if(channel_send(fd, tx, REC_TYPE_APPDATA, ping, 4, NULL) != KEM_SUCCESS) return 1;
+    if(channel_send(fd, tx, REC_TYPE_APPDATA, pong, 4, NULL) != KEM_SUCCESS) return 1;
     return 0;
 }
 
