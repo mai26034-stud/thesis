@@ -9,6 +9,7 @@ The prototype implements a KEM-based server authentication for TLS 1.3, followin
 | Configuration | Server authentication | Library |
 |---|---|---|
 | ML-KEM-768 | KEM (FIPS 203) | liboqs |
+| HQC-3 | KEM | liboqs |
 | X-Wing | Hybrid KEM, X25519 + ML-KEM-768 (Barbosa et al. 2024) | liboqs + wolfCrypt |
 | Baseline | TLS 1.3, X25519 key exchange, ECDSA certificates | wolfSSL |
 
@@ -55,13 +56,13 @@ src/
   mqtt_smoke.c            end-to-end check against a local Mosquitto broker
 analysis/
   analyze.py              summary of statistics (median, mean, 95% CI, bytes)
-certs/                    tests certificates for the baseline
+certs/                    test certificates for the baseline
 VERSIONS.md               exact versions of libraries, build commands, and the verification log
 ```
 
 ## Building
 
-Dependencies (liboqs 0.16.0, wolfSSL 5.9.2) are built from source into "vendor/install", which is not part of this repository. The exact build commands and options are listed in [Versions.md](Versions.md).
+Dependencies (liboqs 0.16.0, wolfSSL 5.9.2) are built from source into "vendor/install", which is not part of this repository. The exact build commands and options are listed in [VERSIONS.md](VERSIONS.md).
 
 ```
 cd src
@@ -85,13 +86,13 @@ Each test prints its result and exits with the number of failures (0 failures fo
 
 ```
 cd src
-./test|_handshake > results.csv
-./test|_baseline > baseline.csv
+./test_handshake > results.csv
+./test_baseline > baseline.csv
 cd ../analysis
-python analyze.py
+python3 analyze.py
 ```
 
-Each configuration runs 3 warm-up handshake followed by 30 measured ones. Per-phase timings (key generation, encapsulation/decapsulation, credential verification, key schedule, total) and bytes sent are recorded per role. Final measurements are taken on a Raspberry Pi; results from development machines are not used in the thesis.
+Each configuration runs 3 warm-up handshakeS followed by 30 measured ones. Per-phase timings (key generation, encapsulation/decapsulation, credential verification, key schedule, total) and bytes sent are recorded per role. Final measurements are taken on a Raspberry Pi; results from development machines are not used in the thesis.
 
 ## Status
 
