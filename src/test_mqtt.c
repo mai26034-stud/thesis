@@ -68,7 +68,7 @@ int main(void){
         snprintf(name, sizeof(name), "RL %zu", cases[i].len);
         kem_status_t r = mqtt_encode_remaining_length(cases[i].len, out, sizeof(out), &n);
         if(r != KEM_SUCCESS){
-            printf("Proccess %s unfortunately failed :(\n", name);
+            printf("Proccess %s failed.\n", name);
             failures++;
         }else{
             failures += check(name, out, n, cases[i].exp, cases[i].n);
@@ -76,49 +76,49 @@ int main(void){
     }
     kem_status_t ret = mqtt_build_connect("D001", 60, buf, sizeof(buf), &written);
     if(ret != KEM_SUCCESS){
-        printf("BUILDING WAS UNSUCCESSFUL :(\n");
+        printf("Building failure\n");
         failures++;
     }else{
         failures += check("CONNECT D001", buf, written, expected, sizeof(expected));
     }
     ret = mqtt_build_publish("a/b", hi, sizeof(hi), 0, 0, buf, sizeof(buf), &written);
     if(ret != KEM_SUCCESS){
-        printf("PUBLISHING WAS UNSUCCESSFUL :(\n");
+        printf("Publishing failure\n");
         failures++;
     }else{
         failures += check("PUBLISH qos0", buf, written, exp_pub0, sizeof(exp_pub0));
     }
     ret = mqtt_build_publish("a/b", hi, sizeof(hi), 1, 10, buf, sizeof(buf), &written);
     if(ret != KEM_SUCCESS){
-        printf("2nd PUBLISHING WAS UNSUCCESSFUL :(\n");
+        printf("2nd publishing attempt was unsuccessful.\n");
         failures++;
     }else{
         failures += check("PUBLISH qos1", buf, written, exp_pub1, sizeof(exp_pub1));
     }
     ret = mqtt_build_disconnect(buf, sizeof(buf), &written);
     if(ret != KEM_SUCCESS){
-        printf("DISCONNECTING WAS UNSUCCESSFUL :(\n");
+        printf("Disconnecting failed.\n");
         failures++;
     }else{
         failures += check("DISCONNECT", buf, written, exp_disc, sizeof(exp_disc));
     }
     ret = mqtt_parse_connack(connack_ok, sizeof(connack_ok), &rc);
     if(ret != KEM_SUCCESS){
-        printf("PARSING OF CONNACK WAS UNSUCCESSFUL :(\n");
+        printf("CONNACK parsing failed.\n");
         failures++;
     }else{
         failures += check_value("CONNACK rc 0", ret, rc, 0);
     }
     ret = mqtt_parse_connack(connack_rc5, sizeof(connack_rc5), &rc);
     if(ret != KEM_SUCCESS){
-        printf("PARSING OF CONNACK WAS UNSUCCESSFUL :(\n");
+        printf("2nd CONNACK parsing failed.\n");
         failures++;
     }else{
         failures += check_value("CONNACK rc 5", ret, rc, 5);
     }
     ret = mqtt_parse_puback(puback, sizeof(puback), &pid);
     if(ret != KEM_SUCCESS){
-        printf("PARSING OF PUBACK WAS UNSUCCESSFUL :(\n");
+        printf("PUBACK parsing failed.\n");
         failures++;
     }else{
         failures += check_value("PUBACK id 10", ret, pid, 10);
