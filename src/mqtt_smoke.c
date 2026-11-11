@@ -7,7 +7,7 @@
 int main(void){
     int fd = transport_client_connect("127.0.0.1", 1883);
     if(fd < 0){
-        printf("[mqtt_smoke] CONNECTION FAILURE..\n");
+        printf("[mqtt_smoke] FAIL: connect.\n");
         return 1;
     }
     uint8_t buf[256];
@@ -16,31 +16,31 @@ int main(void){
     uint16_t pid = 0;
     kem_status_t r = mqtt_build_connect("D001-pub", 60, buf, sizeof(buf), &n);
     if(r != KEM_SUCCESS){
-        printf("[mqtt_smoke] BUILDING OF CONNECTION FAILED..\n");
+        printf("[mqtt_smoke] FAIL: build CONNECT.\n");
         transport_close(fd);
         return 1;
     }
     r = transport_send(fd, buf, n);
     if(r != KEM_SUCCESS){
-        printf("[mqtt_smoke] SENDING FAILED..\n");
+        printf("[mqtt_smoke] FAIL: send CONNECT.\n");
         transport_close(fd);
         return 1;
     }
     uint8_t resp[4];
     r = transport_recv(fd, resp, 4);
     if(r != KEM_SUCCESS){
-        printf("[mqtt_smoke] RECEIVING CONNACK FAILED..\n");
+        printf("[mqtt_smoke] FAIL: receive CONNACK.\n");
         transport_close(fd);
         return 1;
     }
     r = mqtt_parse_connack(resp, 4, &rc);
     if(r != KEM_SUCCESS){
-        printf("[mqtt_smoke] PARSING CONNACK FAILED..\n");
+        printf("[mqtt_smoke] FAIL: parse CONNACK.\n");
         transport_close(fd);
         return 1;
     }
     if(rc != 0){
-        printf("[mqtt_smoke] FAIL: CONNACK RETURN CODE..%d\n", rc);
+        printf("[mqtt_smoke] FAIL: payload formatting.%d\n", rc);
         transport_close(fd);
         return 1;
     }
@@ -50,7 +50,7 @@ int main(void){
     char payload[128];
     int plen = snprintf(payload, sizeof(payload), "{\"e\":[{\"v\":%.1f}],\"tmstp\":%llu}", 23.4, (unsigned long long)ms);
     if(plen <= 0 || (size_t)plen >= sizeof(payload)){
-        printf("[mqtt_smoke] PAYLOAD FORMATTING FAILURE..\n");
+        printf("[mqtt_smoke] PAYLOAD FORMATTING FAILURE.\n");
         transport_close(fd);
         return 1;
     }
@@ -62,31 +62,31 @@ int main(void){
     }
     r = transport_send(fd, buf, n);
     if(r != KEM_SUCCESS){
-        printf("[mqtt_smoke] FAIL: send PUBLISH..\n");
+        printf("[mqtt_smoke] FAIL: send PUBLISH.\n");
         transport_close(fd);
         return 1;
     }
     r = transport_recv(fd, resp, 4);
     if(r != KEM_SUCCESS){
-        printf("[mqtt_smoke] receiving PUBACK FAILURE..\n");
+        printf("[mqtt_smoke] receive PUBACK.\n");
         transport_close(fd);
         return 1;
     }
     r = mqtt_parse_puback(resp, 4, &pid);
     if(r != KEM_SUCCESS || pid != 1){
-        printf("[mqtt_smoke] FAIL: PUBACK packet id.. %d\n", pid);
+        printf("[mqtt_smoke] FAIL: PUBACK packet id. %d\n", pid);
         transport_close(fd);
         return 1;
     }
     r = mqtt_build_disconnect(buf, sizeof(buf), &n);
     if(r != KEM_SUCCESS){
-        printf("[mqtt_smoke] FAIL: build DISCONNECT..\n");
+        printf("[mqtt_smoke] FAIL: build DISCONNECT.\n");
         transport_close(fd);
         return 1;
     }
     r = transport_send(fd, buf, n);
     if(r != KEM_SUCCESS){
-        printf("[mqtt_smoke] FAIL: send Disconnect..\n");
+        printf("[mqtt_smoke] FAIL: send DISCONNECT.\n");
         transport_close(fd);
         return 1;
     }
