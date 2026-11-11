@@ -1,10 +1,10 @@
 #ifndef TRANSCRIPT_H
 #define TRANSCRIPT_H
+#include <wolfssl/options.h>
+#include <wolfssl/wolfcrypt/sha256.h>
 #include <stdint.h>
 #include <stddef.h>
 #include "kem.h"
-#include <wolfssl/options.h>
-#include <wolfssl/wolfcrypt/sha256.h>
 typedef struct{
      wc_Sha256 sha;
 } transcript_t;
