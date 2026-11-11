@@ -30,8 +30,8 @@ static int ping_server(int fd, record_dir_t *tx, record_dir_t *rx){
     size_t n;
     uint8_t ct;
     if(channel_recv(fd, rx, buf, sizeof(buf), &n, &ct) != KEM_SUCCESS) return 1;
+        if(ct != REC_TYPE_DATA || n != 4 || memcmp(buf, "pong", 4) != 0) return 1;
     if(channel_send(fd, tx, REC_TYPE_APPDATA, ping, 4, NULL) != KEM_SUCCESS) return 1;
-    if(ct != REC_TYPE_DATA || n != 4 || memcmp(buf, "pong", 4) != 0) return 1;
     return 0;
 }
 
@@ -54,6 +54,13 @@ static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t
             exit(1);
         }
         if(iteration > 0) metrics_csv_row(stdout, auth_kem_name, "server", iteration, &tm, &stats);
+        if(ping_server(fd, &app_tx, &app_rx) != 0){
+            fprintf(stderr, "[%s] Server ping/pong failed.\n", auth_kem_name);
+            transport_close(fd);
+            record_clear(&app_tx);
+            record_clear(&app_rx);
+            exit(1);
+        }
         transport_close(fd);
         fflush(stdout);
         record_clear(&app_tx);
@@ -79,8 +86,11 @@ static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t
     if(handshake_client(fd, auth_kem_name, ca_pub, &app_tx, &app_rx, &stats, &tm) != KEM_SUCCESS){
         fprintf(stderr, "[%s] Client handshake failed.\n", auth_kem_name);
         ok = 1;
-    } else if(iteration > 0){
-        metrics_csv_row(stdout, auth_kem_name, "client", iteration, &tm, &stats);
+    } else{
+        if(iteration > 0) metrics_csv_row(stdout, auth_kem_name, "client", iteration, &tm, &stats);
+        if(ping_client(fd, &app_tx, &app_rx) != 0){
+            fprintf(stderr, "[%s] Client ping/pong failed.\n", auth_kem_name);
+        }
     }
     transport_close(fd);
     record_clear(&app_tx);
