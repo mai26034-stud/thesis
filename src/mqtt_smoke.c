@@ -91,6 +91,6 @@ int main(void){
         return 1;
     }
     transport_close(fd);
-    printf("ALL IS OK...\n");
+    printf("everything was completed succesfully\n");
     return 0;
 }
