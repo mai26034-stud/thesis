@@ -140,7 +140,10 @@ static int test_transcript_on_determinism(){
     transcript_get_hash(&t1, h1);
     transcript_get_hash(&t2, h2);
 
-    if(memcmp(h1, h2, 32) == 0) return 0;
+    if(memcmp(h1, h2, 32) == 0){
+        printf("[determinism-cumulativity] FAIL\n");
+        return 0;
+    }
     else return 1;
 }
 
@@ -162,7 +165,9 @@ static int test_transcript_on_sensitivity(){
     transcript_get_hash(&t1, h1);
     transcript_get_hash(&t2, h2);
 
-    if(memcmp(h1, h2, 32) != 0) return 0;
+    if(memcmp(h1, h2, 32) != 0){
+        printf("[transcript-sensitivity] FAIL\n");
+        return 0;
     }
     else return 1;
 }
@@ -189,7 +194,10 @@ static int test_transcript_on_cumulativity(){
     transcript_get_hash(&t1, h1);
     transcript_get_hash(&t2, h2);
 
-    if(memcmp(h1, h2, 32) == 0) return 0;
+    if(memcmp(h1, h2, 32) == 0){
+        printf("[transcript-cumulativity] FAIL\n");
+        return 0;
+    }
     else return 1;
 }
 
@@ -221,7 +229,7 @@ static int test_ks_sensitive(){
         return 0;
     }
     else{
-        printf("[ks-sen] test was unsuccessful.");
+        printf("[ks-sesn] FAIL\n");
         return 1;
     }
 }
@@ -316,7 +324,7 @@ static int test_stage_chain(void){
     failures += ks_check("chain ahs", KEM_SUCCESS, st.ahs, ahs, 32);
     failures += ks_check("chain ms", KEM_SUCCESS, st.ms, ms, 32);
     ks_state_clear(&st);
-    if(failures == 0) printf("[test-stage] OK\n");
+    if(failures == 0) printf("[stage-chain] OK\n");
     return failures;
 }
 
