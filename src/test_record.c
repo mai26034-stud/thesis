@@ -40,10 +40,10 @@ static const uint8_t rfc_cfin_record[58] = {
 
 static int ks_check(const char *name, kem_status_t r, const uint8_t *got, const uint8_t *exp, size_t len){
     if(r != KEM_SUCCESS){
-        printf("FAILURE %s: calling was unfortunately unsuccessful..\n", name);
+        printf("FAILURE %s: calling\n", name);
         return 1;
     }else if(memcmp(got, exp, len) != 0){
-        printf("FAILURE %s: A mismatch occured...\n", name);
+        printf("FAILURE %s: mismatch\n", name);
         return 1;
     }else{
         return 0;
@@ -73,7 +73,7 @@ static int test_seal_8448(void){
     failures += ks_check("seal 8448", r, out, rfc_cfin_record, 58);
     if(d.seq != 1) failures++;
     record_clear(&d);
-    if(failures == 0) printf("All went splendid :)\n");
+    if(failures == 0) printf("[seal-8448] No errors.\n");
     return failures;
 }
 
@@ -91,7 +91,7 @@ static int test_open_8448(void){
     if(type != 22) failures++;
     if(d.seq != 1) failures++;
     record_clear(&d);
-    if(failures == 0) printf("All worked perfectly :)\n");
+    if(failures == 0) printf("[open-8448] No errors\n");
     return failures;
 }
 
@@ -110,7 +110,7 @@ static int test_open_tamper(void){
     if(r == KEM_SUCCESS) failures++;
     if(d.seq != 0) failures++;
     record_clear(&d);
-    if(failures == 0) printf("All worked flawlessly :)\n");
+    if(failures == 0) printf("[open-tamper] No errors\n");
     return failures;
 }
 
