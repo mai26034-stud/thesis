@@ -58,3 +58,12 @@ analysis/
 certs/                    tests certificates for the baseline
 VERSIONS.md               exact versions of libraries, build commands, and the verification log
 ```
+
+## Building
+
+Dependencies (liboqs 0.16.0, wolfSSL 5.9.2) are built from source into "vendor/install", which is not part of this repository. The exact build commands and options are listed in [Versions.md](Versions.md).
+
+```
+cd src
+make
+```
