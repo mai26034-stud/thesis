@@ -92,7 +92,7 @@ cd ../analysis
 python3 analyze.py
 ```
 
-Each configuration runs 3 warm-up handshakeS followed by 30 measured ones. Per-phase timings (key generation, encapsulation/decapsulation, credential verification, key schedule, total) and bytes sent are recorded per role. Final measurements are taken on a Raspberry Pi; results from development machines are not used in the thesis.
+Each configuration runs 3 warm-up handshakes followed by 30 measured ones. Per-phase timings (key generation, encapsulation/decapsulation, credential verification, key schedule, total) and bytes sent are recorded per role. Final measurements are taken on a Raspberry Pi; results from development machines are not used in the thesis.
 
 ## Status
 
