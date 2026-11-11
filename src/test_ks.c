@@ -140,14 +140,8 @@ static int test_transcript_on_determinism(){
     transcript_get_hash(&t1, h1);
     transcript_get_hash(&t2, h2);
 
-    if(memcmp(h1, h2, 32) == 0){
-         printf("ALL IS FINE AND OK!! :))\n");
-         return 0;
-    }
-    else{
-        printf("An error did unfortunately occur :(");
-        return 1;
-    }
+    if(memcmp(h1, h2, 32) == 0) return 0;
+    else return 1;
 }
 
 static int test_transcript_on_sensitivity(){
@@ -168,14 +162,9 @@ static int test_transcript_on_sensitivity(){
     transcript_get_hash(&t1, h1);
     transcript_get_hash(&t2, h2);
 
-    if(memcmp(h1, h2, 32) != 0){
-         printf("ALL IS FINE AND OK!! :))\n");
-         return 0;
+    if(memcmp(h1, h2, 32) != 0) return 0;
     }
-    else{
-        printf("An error did unfortunately occur :(");
-        return 1;
-    }
+    else return 1;
 }
 
 static int test_transcript_on_cumulativity(){
@@ -200,14 +189,8 @@ static int test_transcript_on_cumulativity(){
     transcript_get_hash(&t1, h1);
     transcript_get_hash(&t2, h2);
 
-    if(memcmp(h1, h2, 32) == 0){
-         printf("ALL IS FINE AND OK!! :))\n");
-         return 0;
-    }
-    else{
-        printf("An error did unfortunately occur :(");
-        return 1;
-    }
+    if(memcmp(h1, h2, 32) == 0) return 0;
+    else return 1;
 }
 
 static int test_ks_deterministic(){
@@ -234,21 +217,21 @@ static int test_ks_sensitive(){
     ss_auth[0] ^= 1;
     derive_handshake_secrets(ss_eph, 32, ss_auth, 32, ms2);
     if(memcmp(ms1, ms2, 32) != 0){
-        printf("[ks-sens] is OK\n");
+        printf("[ks-sens] OK\n");
         return 0;
     }
     else{
-        printf("[ks-sen] test was unsuccessful :(");
+        printf("[ks-sen] test was unsuccessful.");
         return 1;
     }
 }
 
 static int ks_check(const char *name, kem_status_t r, const uint8_t *got, const uint8_t *exp, size_t len){
     if(r != KEM_SUCCESS){
-        printf("FAILURE %s: calling was unfortunately unsuccessful..\n", name);
+        printf("[ks-check] FAILURE %s: calling\n", name);
         return 1;
     }else if(memcmp(got, exp, len) != 0){
-        printf("FAILURE %s: A mismatch occured...\n", name);
+        printf("[ks-check] FAILURE %s: mismatch\n", name);
         return 1;
     }else{
         return 0;
@@ -294,7 +277,7 @@ static int test_stage_8448(void){
     kem_status_t r = ks_stage_handshake(&st, rfc_ikm, 32);
     int failures = ks_check("stage handshake", r, st.hs, rfc_hs, 32);
     ks_state_clear(&st);
-    if(failures == 0) printf("[stage handshake] RFC 8448 was OK :)\n");
+    if(failures == 0) printf("[stage handshake] RFC 8448 OK\n");
     return failures;
 }
 
@@ -333,7 +316,7 @@ static int test_stage_chain(void){
     failures += ks_check("chain ahs", KEM_SUCCESS, st.ahs, ahs, 32);
     failures += ks_check("chain ms", KEM_SUCCESS, st.ms, ms, 32);
     ks_state_clear(&st);
-    if(failures == 0) printf("All was completed successfully in regards to the stage chain :)\n");
+    if(failures == 0) printf("[test-stage] OK\n");
     return failures;
 }
 
@@ -342,6 +325,6 @@ static int test_finished_8448(void){
     uint8_t out[32];
     kem_status_t r = ks_finished(rfc_c_hs, "finished", rfc_th_sf, out);
     failures += ks_check("finished 8448", r, out, rfc_c_verify, 32);
-    if(failures == 0) printf("[finished] RFC 8448 is ok..\n");
+    if(failures == 0) printf("[finished] RFC 8448 OK\n");
     return failures;
 }
