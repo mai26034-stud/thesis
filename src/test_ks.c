@@ -142,7 +142,7 @@ static int test_transcript_on_determinism(){
 
     if(memcmp(h1, h2, 32) == 0) return 0;
     else{
-        printf("[determinism-cumulativity] FAIL\n");
+        printf("[transcript-cumulativity] FAIL\n");
         return 1;
     }
 }
@@ -229,7 +229,7 @@ static int test_ks_sensitive(){
         return 0;
     }
     else{
-        printf("[ks-sesn] FAIL\n");
+        printf("[ks-sens] FAIL\n");
         return 1;
     }
 }
