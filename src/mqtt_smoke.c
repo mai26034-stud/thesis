@@ -40,7 +40,7 @@ int main(void){
         return 1;
     }
     if(rc != 0){
-        printf("[mqtt_smoke] FAIL: payload formatting.%d\n", rc);
+        printf("[mqtt_smoke] FAIL: CONNACK return code.%d\n", rc);
         transport_close(fd);
         return 1;
     }
@@ -50,13 +50,13 @@ int main(void){
     char payload[128];
     int plen = snprintf(payload, sizeof(payload), "{\"e\":[{\"v\":%.1f}],\"tmstp\":%llu}", 23.4, (unsigned long long)ms);
     if(plen <= 0 || (size_t)plen >= sizeof(payload)){
-        printf("[mqtt_smoke] PAYLOAD FORMATTING FAILURE.\n");
+        printf("[mqtt_smoke] FAIL: payload formatting.\n");
         transport_close(fd);
         return 1;
     }
     r = mqtt_build_publish("tele/D001/3303/0/5700", (const uint8_t *)payload, (size_t)plen, 1, 1, buf, sizeof(buf), &n);
     if(r != KEM_SUCCESS){
-        printf("[mqtt_smoke] FAIL: build PUBLISH..\n");
+        printf("[mqtt_smoke] FAIL: build PUBLISH.\n");
         transport_close(fd);
         return 1;
     }
@@ -68,13 +68,13 @@ int main(void){
     }
     r = transport_recv(fd, resp, 4);
     if(r != KEM_SUCCESS){
-        printf("[mqtt_smoke] receive PUBACK.\n");
+        printf("[mqtt_smoke] FAIL: receive PUBACK.\n");
         transport_close(fd);
         return 1;
     }
     r = mqtt_parse_puback(resp, 4, &pid);
     if(r != KEM_SUCCESS || pid != 1){
-        printf("[mqtt_smoke] FAIL: PUBACK packet id. %d\n", pid);
+        printf("[mqtt_smoke] FAIL: PUBACK packet id %d\n", pid);
         transport_close(fd);
         return 1;
     }
