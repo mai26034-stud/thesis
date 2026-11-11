@@ -4,14 +4,14 @@
 #include <string.h>
 
 void transcript_init(transcript_t *t){
-     if(t == NULL) return;
-     t->len = 0;
-     return;
+     if(t == NULL) return KEM_ERROR;
+     if(wc_InitSha256(&t->sha) != 0) return KEM_ERROR;
+     return KEM_SUCCESS;
 }
 
 kem_status_t transcript_append(transcript_t *t, const uint8_t *msg, size_t msg_len){
-     if(t == NULL || msg == NULL) return KEM_ERROR;
-     if(t->len + msg_len > sizeof(t->buffer)) return KEM_ERROR;
+     if(t == NULL || (msg == NULL && msg_len > 0)) return KEM_ERROR;
+     if(wc_Sha256Update(&t->sha, msg, (word32)msg_len) != 0) return KEM_ERROR;
      memcpy(t->buffer + t->len, msg, msg_len);
      t->len += msg_len;
      return KEM_SUCCESS;
@@ -27,4 +27,9 @@ kem_status_t transcript_get_hash(const transcript_t *t, uint8_t *out){
      ret = wc_Sha256Final(&sha, out);
      if(ret != 0) return KEM_ERROR;
      return KEM_SUCCESS;
+}
+
+void transcript_free(transcript_t *t){
+     if(t != NULL) wc_Sha256Free(&t->sha);
+     return;
 }
