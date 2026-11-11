@@ -10,29 +10,29 @@ struct rl_case{
 
 static int check(const char *name, const uint8_t *got, size_t got_n, const uint8_t *exp, size_t exp_n){
     if(got_n != exp_n || memcmp(got, exp, exp_n) != 0){
-        printf("FAILURE %s :(\n", name);
+        printf("FAIL: %s\n", name);
         return 1;
     }
-    else printf("ALL IS FINE %s :)\n", name);
+    else printf("[mqtt] OK: %s\n", name);
     return 0;
 }
 
 static int expect_fail(const char *name, kem_status_t r){
     if(r == KEM_SUCCESS){
-        printf("FAILURE %s\n", name);
+        printf("[mqtt] FAIL: %s (accepted invalid input)\n", name);
         return 1;
     }else{
-        printf("ALL IS FINE AND GOOD WITH %s :)\n", name);
+        printf("[mqtt] OK: %s (rejected)\n", name);
         return 0;
     }
 }
 
 static int check_value(const char *name, kem_status_t r, unsigned int got, unsigned int exp){
     if(r != KEM_SUCCESS || got != exp){
-        printf("FAILURE %s :(\n", name);
+        printf("[mqtt] FAIL: %s\n", name);
         return 1;
     }else{
-        printf("ALL IS FINE %s\n", name);
+        printf("[mqtt] OK: %s\n", name);
         return 0;
     }
 }
@@ -68,7 +68,7 @@ int main(void){
         snprintf(name, sizeof(name), "RL %zu", cases[i].len);
         kem_status_t r = mqtt_encode_remaining_length(cases[i].len, out, sizeof(out), &n);
         if(r != KEM_SUCCESS){
-            printf("Proccess %s failed.\n", name);
+            printf("[mqtt] FAIL: %s (encode).\n", name);
             failures++;
         }else{
             failures += check(name, out, n, cases[i].exp, cases[i].n);
@@ -132,6 +132,6 @@ int main(void){
     failures += expect_fail("PUBLISH qos1 id0", mqtt_build_publish("a/b", hi, sizeof(hi), 1, 0, buf, sizeof(buf), &written));
     failures += expect_fail("PUBLISH null payload", mqtt_build_publish("a/b", NULL, 2, 0, 0, buf, sizeof(buf), &written));
     failures += expect_fail("CONNACK bad type", mqtt_parse_connack(connack_bad, sizeof(connack_bad), &rc));
-    printf("%d failures occured\n", failures);
+    printf("[mqtt] %d failures\n", failures);
     return failures;
 }
