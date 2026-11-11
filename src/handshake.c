@@ -179,6 +179,7 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     if(t != KEM_SUCCESS) return KEM_ERROR;
     tm->total_ns = metrics_now() - t_start;
     ks_state_clear(&st);
+    transcript_free(&tr);
     wc_ForceZero(c_hs, 32);
     wc_ForceZero(s_hs, 32);
     wc_ForceZero(c_ahs, 32);
@@ -291,6 +292,7 @@ kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *
     if(t != KEM_SUCCESS) return KEM_ERROR;
     tm->total_ns = metrics_now() - t_start;
     ks_state_clear(&st);
+    transcript_free(&tr);
     wc_ForceZero(c_hs, 32);
     wc_ForceZero(s_hs, 32);
     wc_ForceZero(c_ahs, 32);
