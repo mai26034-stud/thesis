@@ -99,7 +99,7 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     const uint8_t *content;
     size_t content_len, total;
     transcript_t tr;
-    transcript_init(&tr);
+    if(transcript_init(&tr) != KEM_SUCCESS) return KEM_ERROR;
     size_t written;
     uint64_t t_start = metrics_now();
     t0 = metrics_now();
@@ -227,7 +227,7 @@ kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *
     const uint8_t *content;
     size_t content_len, total, written;
     transcript_t tr;
-    transcript_init(&tr);
+    if(transcript_init(&tr) != KEM_SUCCESS) return KEM_ERROR;
     uint64_t t_start = metrics_now();
     kem_status_t t;
     t = recv_message(fd, msgbuf, sizeof(msgbuf), &type, &content, &content_len, &total);
