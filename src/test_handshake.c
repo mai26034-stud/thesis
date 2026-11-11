@@ -26,7 +26,7 @@ static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t
         timings_init(&tm);
         kem_status_t r = handshake_server(fd, auth_kem_name, cred, cred_len, srv_sk, &app_tx, &app_rx, &stats, &tm);
         if(r != KEM_SUCCESS){
-            fprintf(stderr, "[%s] Server handshake failed..\n", auth_kem_name);
+            fprintf(stderr, "[%s] Client handshake failed..\n", auth_kem_name);
             transport_close(fd);
             exit(1);
         }
