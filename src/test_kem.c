@@ -70,7 +70,7 @@ static int run_roundtrip(const char *name){
              free(ct);
              free(ss1);
              free(ss2);
-             printf("Some malloc failed\n");
+             printf("[X-Wing] TAMPER TEST FAILED: malloc\n");
              return 1;
     }
 
