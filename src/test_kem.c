@@ -93,6 +93,12 @@ static int run_roundtrip(const char *name){
         printf("[%s] ROUNDTRIP OK.\n", name);
     } else{
         printf("[%s] ROUNDTRIP FAILED: The shared secrets differ.\n", name);
+        free(pk);
+        free(sk);
+        free(ct);
+        free(ss1);
+        free(ss2);
+        kem_close(k);
         return 1;
     }
     free(pk);
@@ -114,6 +120,7 @@ static int run_tamper_test(void){
     uint8_t *ss1 = malloc(kem_ss_len(k));
     uint8_t *ss2 = malloc(kem_ss_len(k));
 
+    if(pk == NULL || sk == NULL || ct == NULL || ss1 == NULL || ss2 == NULL) return 1;
     kem_keypair(k, pk, sk);
     kem_encaps(k, pk, ct, ss1);
 
