@@ -71,7 +71,7 @@ static int run_roundtrip(const char *name){
         free(ss1);
         free(ss2);
         kem_close(k);
-        printf("[X-Wing] ROUNDTRIP FAILED: malloc\n");
+        printf("[%s] ROUNDTRIP FAILED: malloc\n", name);
         return 1;
     }
 
