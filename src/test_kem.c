@@ -57,7 +57,6 @@ int main(){
 static int run_roundtrip(const char *name){
     kem_t *k = kem_open(name);
     if(k == NULL) return 1;
-    printf("All is proceeding flawlessly..\n");
    
     uint8_t *pk = malloc(kem_pk_len(k));
     uint8_t *sk = malloc(kem_sk_len(k));
@@ -91,9 +90,9 @@ static int run_roundtrip(const char *name){
     }
 
     if(memcmp(ss1, ss2, kem_ss_len(k)) == 0){
-        printf("[%s] ROUNDTRIP OK: shared secrets do in fact match.\n", name);
+        printf("[%s] ROUNDTRIP OK.\n", name);
     } else{
-        printf("ROUNDTRIP FAILED: The secrets do not in fact match.\n");
+        printf("[%s] ROUNDTRIP FAILED: The shared secrets differ..\n", name);
         return 1;
     }
     free(pk);
@@ -124,10 +123,10 @@ static int run_tamper_test(void){
 
     int ok;
     if(memcmp(ss1, ss2, kem_ss_len(k)) != 0){
-        printf("[X-Wing] TAMPER TEST OK: altering ctX did in fact change the shared secret.\n");
+        printf("[X-Wing] TAMPER TEST OK.\n");
         ok = 0;
     }else{
-        printf("[X-Wing] TAMPER TEST FAILED: shared secret was not impacted despite the tampering.\n");
+        printf("[X-Wing] TAMPER TEST FAILED: shared secret remained unchanged..\n");
         ok = 1;
     }
     free(pk);
@@ -150,23 +149,23 @@ static int run_x25519_rfc7748(){
     memcpy(sk + 32, alice_pub, 32);
     kem_status_t r = kem_decaps(k, sk, bob_pub, ss);
     if(r != KEM_SUCCESS){
-        printf("Alice could not call successfully..\n");
+        printf("[X25519] RFC 7748 FAILED: decaps (Alice)\n");
         ok = 1;
     }else if(memcmp(ss, shared_k, 32) != 0){
-        printf("K found by Alice is incorrect..\n");
+        printf("[X25519] RFC 7748 FAILED: wrong K (Alice)\n");
         ok = 1;
     }
     memcpy(sk, bob_priv, 32);
     memcpy(sk + 32, bob_pub, 32);
     r = kem_decaps(k, sk, alice_pub, ss);
     if(r != KEM_SUCCESS){
-        printf("Bob could not call successfully..\n");
+        printf("[X25519] RFC 7748 FAILED: decaps (Bob)\n");
         ok = 1;
     }else if(memcmp(ss, shared_k, 32) != 0){
-        printf("K found by Bob is incorrect..\n");
+        printf("[X25519] RFC 7748 FAILED: wrong K (Bob)\n");
         ok = 1;
     }
-    if(ok == 0) printf("[X25519] RFC 7748 run successfuly\n");
+    if(ok == 0) printf("[X25519] RFC 7748 run successfully\n");
     kem_close(k);
     return ok;
 }
