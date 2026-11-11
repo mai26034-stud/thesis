@@ -40,7 +40,7 @@ int main(void){
         return 1;
     }
     if(rc != 0){
-        printf("[mqtt_smoke] FAIL: CONNACK return code.%d\n", rc);
+        printf("[mqtt_smoke] FAIL: CONNACK return code %d\n", rc);
         transport_close(fd);
         return 1;
     }
