@@ -70,8 +70,8 @@ static int run_roundtrip(const char *name){
         free(ct);
         free(ss1);
         free(ss2);
-        kem_close();
-        printf("[X-Wing] TAMPER TEST FAILED: malloc\n");
+        kem_close(k);
+        printf("[X-Wing] ROUNDTRIP FAILED: malloc\n");
         return 1;
     }
 
@@ -127,7 +127,7 @@ static int run_tamper_test(void){
         free(ct);
         free(ss1);
         free(ss2);
-        kem_close();
+        kem_close(k);
         printf("[X-Wing] TAMPER TEST FAILED: malloc\n");
         return 1;
     }
