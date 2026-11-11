@@ -91,3 +91,13 @@ cd ../analysis
 python analyze.py
 ```
 
+Each configuration runs 3 warm-up handshake followed by 30 measured ones. Per-phase timings (key generation, encapsulation/decapsulation, credential verification, key schedule, total) and bytes sent are recorded per role. Final measurements are taken on a Raspberry Pi; results from development machines are not used in the thesis.
+
+## Status
+
+- Done: KEM layer, key schedule, record layer, AuthKEM handshake with encrypted flight and Finished messages, classical baseline, MQTT packet layer.
+- In progress: MQTT over the protected channel, gateway and publisher, measurement harness on Raspberry Pi.
+
+## Test certificates
+
+The files in `certs/` (including private keys) were generated offline with the OpenSSL CLI for the baseline experiments only. They have no use outside of this prototype.
