@@ -62,27 +62,27 @@ static int test_wire_sequential(void){
     wire_stats_init(&stats);
     kem_status_t s = wire_write(WIRE_CLIENT_HELLO, content, 12, buf, sizeof(buf), &w1, &stats);
     if(s != KEM_SUCCESS){
-        printf("[wire-seq] FAILED: 1st writing :(\n");
+        printf("[wire-seq] FAILED: 1st writing.\n");
         return 1;
     }
     s = wire_write(WIRE_SERVER_HELLO, content2, 12, buf + w1, sizeof(buf) - w1, &w2, &stats);
     if(s != KEM_SUCCESS){
-        printf("[wire-seq] FAILED: 2nd writing :(\n");
+        printf("[wire-seq] FAILED: 2nd writing.\n");
         return 1;
     }
     size_t total = w1 + w2;
     s = wire_read(buf, total, &type1, &c1, &len1, &consumed1);
     if(s != KEM_SUCCESS){
-        printf("[wire-seq] FAILED: 1st reading :(\n");
+        printf("[wire-seq] FAILED: 1st reading.\n");
         return 1;
     }
     if(consumed1 != w1){
-        printf("[wire-seq] FAILED: 1st consumed part :(\n");
+        printf("[wire-seq] FAILED: 1st consumed part.\n");
         return 1;
     }
     s = wire_read(buf + consumed1, total - consumed1, &type2, &c2, &len2, &consumed2);
     if(s != KEM_SUCCESS){
-        printf("[wire-seq] FAILED: 2nd reading :(\n");
+        printf("[wire-seq] FAILED: 2nd reading.\n");
         return 1;
     }
     if(type2 == WIRE_SERVER_HELLO && len2 == 12 && memcmp(c2, content2, 12) == 0){
