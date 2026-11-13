@@ -8,12 +8,15 @@
 - Development machine: Intel core i5-10400, Ubuntu 24.04 on WSL2
 
 ## KEM sizes (bytes)
-- HQC-3  (KEM_hqc_3):    pk 4514, sk 4602, ct 8978, ss 32
+- HQC-3 (KEM_hqc_3):    pk 4514, sk 4602, ct 8978, ss 32
 - ML-KEM-768 (KEM_ml_kem_768): pk 1184, sk 2400, ct 1088, ss 32
+- X-Wing (X25519 + ML-KEM-768): pk 1216, sk 2464, ct 1120, ss 32
+- X25519 (as a KEM, ephemeral): pk 32, sk 64, (private || public), ct 32, ss 32
 
 ## Link line
-- AuthKEM tests (test_kem, test_ks, test_handshake): -lwolfssl -loqs (this order)
+- AuthKEM tests (test_kem, test_ks, test_handshake): -lwolfssl -loqs -lm (this order)
 - Baseline (test_baseline): -lwolfssl -lm
+- libm is needed because objects of the static wolfSSL library that are pulled in by the ECC code use pow() and log().
 - Include: -I vendor/install/include
 - Lib: -L vendor/install/lib
 - No OpenSSL in any measured path. OpenSSL CLI used only offline to generate the baseline test certificates (certs/).
