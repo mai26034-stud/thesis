@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "record.h"
+#include "channel.h"
 
 static kem_status_t recv_message(int fd, uint8_t *buf, size_t buf_cap, uint8_t *type_out, const uint8_t **content_out, size_t *content_len_out, size_t *total_out){
     if(buf == NULL || type_out == NULL || content_out == NULL || content_len_out == NULL || total_out == NULL) return KEM_ERROR;
