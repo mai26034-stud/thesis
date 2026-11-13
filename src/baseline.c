@@ -115,6 +115,7 @@ kem_status_t baseline_client(int fd, const char *ca_cert_path, uint8_t *key_out,
     uint64_t t0 = metrics_now();
     ret = wolfSSL_connect(ssl);
     tm->total_ns = metrics_now() - t0;
+    tm->client_ready_ns = tm->total_ns;
     if(ret != WOLFSSL_SUCCESS){
         wolfSSL_free(ssl);
         wolfSSL_CTX_free(ctx);
