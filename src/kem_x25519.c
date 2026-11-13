@@ -125,15 +125,9 @@ static kem_status_t x25519_decaps(const kem_t *k, const uint8_t *sk, const uint8
         wc_curve25519_free(&peer);
         return KEM_ERROR;
     }
-    ret = wc_curve25519_set_rng(&mine, &ctx->rng);
-    if(ret != 0){
-        wc_curve25519_free(&mine);
-        wc_curve25519_free(&peer);
-        return KEM_ERROR;
-    }
 #ifdef WOLFSSL_CURVE25519_BLINDING
     x25519_ctx_t *ctx = (x25519_ctx_t*)k->backend;
-    ret = wc_curve25519_free(&mine, &ctx->rng);
+    ret = wc_curve25519_set_rng(&mine, &ctx->rng);
     if(ret != 0){
         wc_curve25519_free(&mine);
         wc_curve25519_free(&peer);
