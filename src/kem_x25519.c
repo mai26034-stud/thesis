@@ -80,7 +80,6 @@ static kem_status_t x25519_keypair(const kem_t *k, uint8_t *pk, uint8_t *sk){
 static kem_status_t x25519_encaps(const kem_t *k, const uint8_t *pk, uint8_t *ct, uint8_t *ss){
     curve25519_key eph;
     curve25519_key peer;
-    x25519_ctx_t *ctx = (x25519_ctx_t*)k->backend;
     wc_curve25519_init(&eph);
     wc_curve25519_init(&peer);
     int ret = wc_curve25519_make_key(&ctx->rng, 32, &eph);
@@ -89,6 +88,15 @@ static kem_status_t x25519_encaps(const kem_t *k, const uint8_t *pk, uint8_t *ct
         wc_curve25519_free(&peer);
         return KEM_ERROR;
     }
+#ifdef WOLFSSL_CURVE25519_BLINDING
+    x25519_ctx_t *ctx = (x25519_ctx_t*)k->backend;
+    ret = wc_curve25519_free(&mine, &ctx->rng);
+    if(ret != 0){
+        wc_curve25519_free(&mine);
+        wc_curve25519_free(&peer);
+        return KEM_ERROR;
+    }
+#endif
     ret = wc_curve25519_import_public_ex(pk, 32, &peer, EC25519_LITTLE_ENDIAN);
     if(ret != 0){
         wc_curve25519_free(&eph);
