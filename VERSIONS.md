@@ -14,7 +14,7 @@
 - X25519 (as a KEM, ephemeral): pk 32, sk 64, (private || public), ct 32, ss 32
 
 ## Link line
-- AuthKEM tests (test_kem, test_ks, test_handshake): -lwolfssl -loqs -lm (this order)
+- AuthKEM tests (test_kem, test_ks, test_record, test_handshake): -lwolfssl -loqs -lm (this order)
 - Baseline (test_baseline): -lwolfssl -lm
 - libm is needed because objects of the static wolfSSL library that are pulled in by the ECC code use pow() and log().
 - Include: -I vendor/install/include
@@ -37,14 +37,18 @@ Randomness: getentropy() of the OS (no OpenSSL RNG).
 ## wolfSSL build command (verified working)
 From vendor/wolfssl
 ```
+make distclean
 ./configure --prefix=$HOME/thesis/vendor/install \
   --enable-static --disable-shared \
   --enable-curve25519 --enable-ed25519 --enable-mlkem \
   --enable-sha3 --enable-hkdf --enable-aesgcm \
   --enable-chacha --enable-poly1305 \
+  --enable-sp --enable-sp-asm --enable-aesni --enable-intelasm \
   CFLAGS=-DWOLFSSL_PUBLIC_MP
 make && make install
 ```
+Verified in the installed options.h: WOLFSSL_HAVE_SP_ECC, WOLFSSL_SP_X86_64_ASM, WOLFSSL_AESNI, USE_INTEL_SPEEDUP.
+
 The baseline pins in code (baseline.c, both sides):
 ```
   wolfSSL_CTX_set_groups -> WOLFSSL_ECC_X25519
@@ -66,10 +70,15 @@ The baseline pins in code (baseline.c, both sides):
 - wolfSSL was built without the --enable-keylog-export option, and thus, no key-log file I/O occurs inside the timed handshake.
 - All reported measurements use the configuration recorded in this file.
 - TCP_NODELAY is set on every connection (AuthKEM and baseline), so that Nagle's algorithm combined with delayed ACKs does not add latency to flights of consecutive messages.
+- Server credential (AuthKEM): id_len(2) | identity | pk_len(2) | KEM public key | sig_len (2) | signature. The signature is ECDSA P-256 with SHA-256 (DER, at most 72 bytes) by a test CA, the same signature algorithm as the baseline certificates. The CA signature therefore remains classical in all configurations.
+- Transcript hash: a running SHA-256 state, updated once per message.
+key_schedule_ns covers HKDF, HMAC and the transcript hash finalization. Hashing of each message is included only in total_ns.
 
 ## Specification conformance
 - AuthKEM handshake: draft-celi-wiggers-tls-authkem-06. Revision -07 (May of 2026) is a version bump only, according to its changelog, with the implication being that the implementation applies to both.
 - X-Wing: construction of Barbosa et al. 2024 (IACR CiC 1(1), Definition 8), as cited in the thesis declaration. The label is first, and the KeyGen is seedless. Later IETF X-Wing drafts (from version -05 and onwards) do place the label last and derive the keys from a seed. These variants were not used in this thesis.
+- ML-KEM-768: FIPS 203 (liboqs docs/algorithms/kem/ml_kem.yml, spec-version: ML-KEM; upstream: mlkem-native).
+- HQC-3: HQC specification version 2025-08-22 (liboqs docs/algorithms/kem/hqc.yml, spec-version).)
 
 ## Validation against published test vectors
 - X25519: RFC 7748 §6.1, both directions (test_kem); shared secret in the RFC 7748 little-endian encoding.
