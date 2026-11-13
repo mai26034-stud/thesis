@@ -74,7 +74,7 @@ static int ct_equal(const uint8_t *a, const uint8_t *b, size_t len){
 }
 
 kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *ca_pub, const uint8_t *early_data, size_t early_len, record_dir_t *app_tx, record_dir_t *app_rx, wire_stats_t *stats, timings_t *tm){
-    if(tm == NULL) return KEM_ERROR;
+    if(tm == NULL || (early_data == NULL && early_len > 0)) return KEM_ERROR;
     uint64_t t0;
     ks_state_t st;
     uint8_t th[32];
@@ -131,6 +131,11 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     if(t == KEM_SUCCESS) t = record_init(&hs_rx, s_hs);
     tm->key_schedule_ns += metrics_now() - t0;
     if(t != KEM_SUCCESS) return KEM_ERROR;
+    tm->client_ready_ns = metrics_now() - t_start;
+    if(early_len > 0){
+        t = channel_send(fd, app_tx, REC_TYPE_APPDATA, early_data, early_len, NULL);
+        if(t != KEM_SUCCESS) return KEM_ERROR;
+    }
     t = recv_encrypted(fd, &hs_rx, msgbuf, sizeof(msgbuf), &type, &content, &content_len, &tr);
     if(t != KEM_SUCCESS || type != WIRE_ENCRYPTED_EXTENSIONS || content_len != 0) return KEM_ERROR;
     t = recv_encrypted(fd, &hs_rx, msgbuf, sizeof(msgbuf), &type, &content, &content_len, &tr);
