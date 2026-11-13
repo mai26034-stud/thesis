@@ -87,7 +87,7 @@ static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t
         ok = 1;
     } else{
         if(iteration > 0) metrics_csv_row(stdout, auth_kem_name, "client", iteration, &tm, &stats);
-        if(pong_client(fd, &app_tx, &app_rx) != 0){
+        if(pong_client(fd, &app_rx) != 0){
             fprintf(stderr, "[%s] Client ping/pong failed.\n", auth_kem_name);
             ok = 1;
         }
