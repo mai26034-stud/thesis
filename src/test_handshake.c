@@ -13,12 +13,10 @@
 #define WARMUP 3
 #define ITERATIONS 30
 
-static int ping_client(int fd, record_dir_t *tx, record_dir_t *rx){
-    const uint8_t ping[4] = {'p','i','n','g'};
+static int pong_client(int fd, record_dir_t *rx){
     uint8_t buf[64];
     size_t n;
     uint8_t ct;
-    if(channel_send(fd, tx, REC_TYPE_APPDATA, ping, 4, NULL) != KEM_SUCCESS) return 1;
     if(channel_recv(fd, rx, buf, sizeof(buf), &n, &ct) != KEM_SUCCESS) return 1;
     if(ct != REC_TYPE_APPDATA || n != 4 || memcmp(buf, "pong", 4) != 0) return 1;
     return 0;
@@ -83,12 +81,13 @@ static int one_handshake(const char *auth_kem_name, uint16_t port, const uint8_t
     int ok = 0;
     timings_t tm;
     timings_init(&tm);
-    if(handshake_client(fd, auth_kem_name, ca_pub, &app_tx, &app_rx, &stats, &tm) != KEM_SUCCESS){
+    const uint8_t ping[4] = {'p','i','n','g'};
+    if(handshake_client(fd, auth_kem_name, ca_pub, ping, 4, &app_tx, &app_rx, &stats, &tm) != KEM_SUCCESS){
         fprintf(stderr, "[%s] Client handshake failed.\n", auth_kem_name);
         ok = 1;
     } else{
         if(iteration > 0) metrics_csv_row(stdout, auth_kem_name, "client", iteration, &tm, &stats);
-        if(ping_client(fd, &app_tx, &app_rx) != 0){
+        if(pong_client(fd, &app_tx, &app_rx) != 0){
             fprintf(stderr, "[%s] Client ping/pong failed.\n", auth_kem_name);
             ok = 1;
         }
