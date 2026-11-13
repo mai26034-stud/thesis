@@ -35,6 +35,7 @@ ninja && ninja install
 Randomness: getentropy() of the OS (no OpenSSL RNG).
 
 ## wolfSSL build command (verified working)
+From vendor/wolfssl
 ```
 ./configure --prefix=$HOME/thesis/vendor/install \
   --enable-static --disable-shared \
@@ -42,12 +43,23 @@ Randomness: getentropy() of the OS (no OpenSSL RNG).
   --enable-sha3 --enable-hkdf --enable-aesgcm \
   --enable-chacha --enable-poly1305 \
   CFLAGS=-DWOLFSSL_PUBLIC_MP
+make && make install
 ```
 The baseline pins in code (baseline.c, both sides):
 ```
   wolfSSL_CTX_set_groups -> WOLFSSL_ECC_X25519
   wolfSSL_CTX_set_cipher_list -> "TLS13-AES128-GCM-SHA256"
 ```
+## Implementation choice
+- Rule: every primitive uses the most optimized implementation that its library provides for the target platform.
+- liboqs: ML-KEM-768 uses the optimized x86-64 implementation (mlkem-native): HQC-3 uses the portable C implementation, as liboqs 0.16.0 provides no optimized variant.
+- wolfSSL: ECDSA P-256 uses the single-precision implementation with x86_64 assembly (--enable-sp, --enable-sp-asm): AES-GCM uses AES-NI (-enable-aesni): X25519 uses the x86_64 assembly implementation (--enable-intelasm).
+- The same rule applies on the Raspberry Pi with the corresponding ARM options; the Pi build is recorded separately.
+
+## Sude-channel settings
+- wolfSSL enables X25519 blinding (WOLFSSL_CURVE25519_BLINDING) by default only for the C-only implementation (wolfcrypt/settings.h). With USE_INTEL_SPEEDUP (or WOLFSSL_ARMASM) the assembly implementation is used and blinding is not defined.
+- kem_x25519.c therefore calls wc_curve25519_set_rng only under #ifdef WOLFSSL_CURVE25519_BLINDING, following the library's own configuration.
+
 ## Configuration decisions
 - wolfSSL 5.9.2 was built with --enable-mlkem, and makes use of X25519MLKEM768 and TLS_AES_256_GCM_SHA384 by default. The classical baseline therefore pins, on both sides, the group X25519 and the cipher suite TLS_AES_128_GCM_SHA256 (which is the mandatory-to-implement suite of RFC 8446 §9.1, which is also used by the AuthKEM record layer). Verified at runtime: X25519/TLS13-AES128-GCM-SHA256.
 - liboqs was built without OpenSSL: OQS_USE_OPENSSL, OQS_USE_SHA2_OPENSSL, OQS_USE_AES_OPENSSL, OQS_USE_SHA3_OPENSSL are undefined in oqsconfig.h, and all tests link without -lcrypto.
