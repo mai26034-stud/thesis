@@ -14,6 +14,7 @@ typedef struct{
     uint64_t auth_decaps_ns;
     uint64_t key_schedule_ns;
     uint64_t total_ns;
+    uint64_t client_ready_ns;
 } timings_t;
 
 uint64_t metrics_now(void);
