@@ -32,10 +32,9 @@ int transport_client_connect(const char *host, uint16_t port){
     return fd;
 }
 
-int transport_server_accept(uint16_t port){
+int transport_listen(uint16_t port){
     int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
     if(listen_fd < 0) return -1;
-
     int opt = 1;
     setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
     struct sockaddr_in addr;
@@ -43,24 +42,34 @@ int transport_server_accept(uint16_t port){
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
     addr.sin_addr.s_addr = INADDR_ANY;
-
     if(bind(listen_fd, (struct sockaddr*)&addr, sizeof(addr)) < 0){
         close(listen_fd);
         return -1;
     }
-    if(listen(listen_fd, 1) < 0){
+    if(listen(listen_fd, 16) < 0){
         close(listen_fd);
         return -1;
     }
+    return listen_fd;
+}
 
+int transport_accept(int listen_fd){
+    if(listen_fd < 0) return -1;
     int conn_fd = accept(listen_fd, NULL, NULL);
-    close(listen_fd);
     if(conn_fd < 0) return -1;
     int one = 1;
     if(setsockopt(conn_fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one)) != 0){
         close(conn_fd);
         return -1;
     }
+    return conn_fd;
+}
+
+int transport_server_accept(uint16_t port){
+    int listen_fd = transport_listen(port);
+    if(listen_fd < 0) return -1;
+    int conn_fd = transport_accept(listen_fd);
+    close(listen_fd);
     return conn_fd;
 }
 

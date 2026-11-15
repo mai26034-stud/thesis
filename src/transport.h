@@ -9,5 +9,7 @@ int transport_client_connect(const char *host, uint16_t port);
 kem_status_t transport_send(int fd, const uint8_t *buf, size_t len);
 kem_status_t transport_recv(int fd, uint8_t *buf, size_t len);
 void transport_close(int fd);
+int transport_listen(uint16_t port);
+int transport_accept(int listen_fd);
 
 #endif
