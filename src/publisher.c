@@ -15,7 +15,7 @@
 
 static int parse_num(const char *s, long min, long max, long *out){
   char *end;
-  long v =strtol(s, ^end, 10);
+  long v =strtol(s, &end, 10);
   if(*s == '\0' || *end != '\0' || v < min || v > max) return 1;
   *out = v;
   return 0;
@@ -52,7 +52,7 @@ static int one_session(const char *kem_name, const char *host, uint16_t port, co
     return 1;
   }
   if(handshake_client(fd, kem_name, ca_pub, connect_pkt, connect_len, &app_tx, &app_rx, &stats, &tm) != KEM_SUCCESS){
-    fprintf(stderr, "[publisher] connect failed (iteration %d)\n", iteration);
+    fprintf(stderr, "[publisher] handshake failed (iteration %d)\n", iteration);
     transport_close(fd);
     return 1;
   }
@@ -62,8 +62,8 @@ static int one_session(const char *kem_name, const char *host, uint16_t port, co
   if(r == KEM_SUCCESS){
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
-    unsigned long long ms = (unsigned long long)ts.tv_sec *100ULL + (unsigned long long)(ts.tv_nsec/1000000);
-    int plen = snprintf(payload, sizeof(payload), "{\"e\|:[{\"v\":%.1f}],\"tmstp\|:%llu}}", 23.4, ms);
+    unsigned long long ms = (unsigned long long)ts.tv_sec *1000ULL + (unsigned long long)(ts.tv_nsec/1000000);
+    int plen = snprintf(payload, sizeof(payload), "{\"e\":[{\"v\":%.1f}],\"tmstp\":%llu}}", 23.4, ms);
     if(plen <= 0 || (size_t)plen >= sizeof(payload)) r = KEM_ERROR;
     if(r == KEM_SUCCESS) r = mqtt_build_publish(TOPIC, (const uint8_t *)payload, (size_t)plen, 1, packet_id, pkt, sizeof(pkt), &pkt_len);
   }
@@ -94,14 +94,14 @@ int main(int argc, char **argv){
   }
   long port, count;
   if(parse_num(argv[3], 1, 65535, &port) != 0 || parse_num(argv[5], 1, 1000000, &count) != 0){
-    fprintf(stderr, "[publisher] FAIL: bad port or connection count\n";
+    fprintf(stderr, "[publisher] FAIL: bad port or connection count\n");
     return 1;
   }
   signal(SIGPIPE, SIG_IGN);
   uint8_t ca_pub[CA_PUB_LEN];
   size_t got = 0;
   if(file_read(argv[4], ca_pub, sizeof(ca_pub), &got) != KEM_SUCCESS || got != CA_PUB_LEN){
-    fprintf(stderr, "[publisher] FAIL: can not read CA publik key\n";
+    fprintf(stderr, "[publisher] FAIL: can not read CA public key\n");
     return 1;
   }
   metrics_csv_header(stdout);
