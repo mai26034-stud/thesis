@@ -14,3 +14,5 @@ src/mqtt_smoke
 src/test_record
 src/provision
 keys/
+src/gateway
+src/publisher
