@@ -40,6 +40,9 @@ provision: provision.c files.c credential.c kem.c kem_oqs.c kem_x25519.c kem_hyb
 gateway: gateway.c files.c $(CORE)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
 
+publisher: publisher.c files.c mqtt.c $(CORE)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
+
 clean:
 	rm -f test_kem test_ks test_wire test_transport test_handshake test_baseline test_mqtt mqtt_smoke *.o test_record provision gateway publisher
 
