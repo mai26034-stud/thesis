@@ -57,9 +57,9 @@ static int one_session(const char *kem_name, const char *host, uint16_t port, co
     return 1;
   }
   kem_status_t r = recv_app(fd, &app_rx, resp, sizeof(resp), &n);
-  if(r = KEM_SUCCESS) r = mqtt_parse_connack(resp, n, &rc);
-  if(r = KEM_SUCCESS && rc != 0) r = KEM_ERROR;
-  if(r = KEM_SUCCESS){
+  if(r == KEM_SUCCESS) r = mqtt_parse_connack(resp, n, &rc);
+  if(r == KEM_SUCCESS && rc != 0) r = KEM_ERROR;
+  if(r == KEM_SUCCESS){
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
     unsigned long long ms = (unsigned long long)ts.tv_sec *100ULL + (unsigned long long)(ts.tv_nsec/1000000);
@@ -67,12 +67,12 @@ static int one_session(const char *kem_name, const char *host, uint16_t port, co
     if(plen <= 0 || (size_t)plen >= sizeof(payload)) r = KEM_ERROR;
     if(r == KEM_SUCCESS) r = mqtt_build_publish(TOPIC, (const uint8_t *)payload, (size_t)plen, 1, packet_id, pkt, sizeof(pkt), &pkt_len);
   }
-  if(r = KEM_SUCCESS) r = channel_send(fd, &app_tx, REC_TYPE_APPDATA, pkt, pkt_len, NULL);
-  if(r = KEM_SUCCESS) r = recv_app(fd, &app_rx, resp, sizeof(resp), &n);
-  if(r = KEM_SUCCESS) r = mqtt_parse_puback(resp, n, &pid);
-  if(r = KEM_SUCCESS && pid != packet_id) r = KEM_ERROR;
-  if(r = KEM_SUCCESS) tm.puback_ns = metrics_now() - t_start;
-  if(r = KEM_SUCCESS){
+  if(r == KEM_SUCCESS) r = channel_send(fd, &app_tx, REC_TYPE_APPDATA, pkt, pkt_len, NULL);
+  if(r == KEM_SUCCESS) r = recv_app(fd, &app_rx, resp, sizeof(resp), &n);
+  if(r == KEM_SUCCESS) r = mqtt_parse_puback(resp, n, &pid);
+  if(r == KEM_SUCCESS && pid != packet_id) r = KEM_ERROR;
+  if(r == KEM_SUCCESS) tm.puback_ns = metrics_now() - t_start;
+  if(r == KEM_SUCCESS){
     if(mqtt_build_disconnect(pkt, sizeof(pkt), &pkt_len) == KEM_SUCCESS){
       channel_send(fd, &app_tx, REC_TYPE_APPDATA, pkt, pkt_len, NULL);
     }
