@@ -28,4 +28,23 @@ static kem_status_t recv_app(int fd, record_dir_t *rx, uint8_t *buf, size_t cap,
   return KEM_SUCCESS;
 }
 
-static int one_session(){}
+static int one_session(const char *kem_name, const char *host, uint16_t port, const uint8_t *ca_pub, int iteration){
+  uint8_t connect_pkt[64];
+  uint8_t pkt[256];
+  uint8_t resp[REC_MAX_PLAIN + 256];
+  char payload[128];
+  size_t connect_len = 0;
+  size_t pkt_len = 0;
+  size_t n = 0;
+  uint8_t rc = 0xFF;
+  uint16_t pid = 0;
+  uint16_t packet_id = (uint16_t)(((iteration - 1) % 65535) + 1);
+  record_dir_t app_tx, app_rx;
+  wire_stats_t stats;
+  timings_t tm;
+  wire_stats_init(&stats);
+  timings_init(&tm);
+  if(mqtt_build_connect(CLIENT_ID, 60, connect_pkt, sizeof(connect_pkt), &connect_len) != KEM_SUCCESS) return 1;
+  uint64_t t_start = metrics_now();
+  int fd = transport_client
+}
