@@ -73,4 +73,59 @@ int main(int argc, char **argv){
     uint8_t cred[6 + CRED_MAX_IDENTITY + CRED_MAX_KEM_PK + CA_SIG_MAX];
     size_t cred_len = 0;
     size_t got = 0;
+    uint8_t *sk = malloc(sk_len);
+    if(sk == NULL) return 1;
+    int n1 = snprintf(path, sizeof(path), "%s/%s.cred", dir, kem_name);
+    if(n1 <= 0 || (size_t)n1 >= sizeof(path) || file_read(path, cred, sizeof(cred), &cred_len) != KEM_SUCCESS){
+        fprintf(stderr, "[gateway] FAIL: can not read credential\n");
+        free(sk);
+        return 1;
+    }
+    int n2 = snprintf(path, sizeof(path), "%s/%s.sk", dir, kem_name);
+    if(n2 <= 0 || (size_t)n2 >= sizeof(path) || file_read(path, sk, sk_len, &got) != KEM_SUCCESS){
+        fprintf(stderr, "[gateway] FAIL: can not read secret key\n");
+        wc_ForceZero(sk, sk_len);
+        free(sk);
+        return 1;
+    }
+    int lfd = transport_listen((uint16_t));
+    if(lfd < 0){
+        fprintf(stderr, "[gateway] FAIL: listen on port %ld\n", port);
+        wc_ForceZero(sk, sk_len);
+        free(sk);
+        return 1;
+    }
+    metrics_csv_header(stdout);
+    fflush(stdout);
+    for(long i = 1; count == 0 || i <= count; i++){
+        int fd = transport_accept(lfd);
+        if(fd < 0) continue;
+        record_dir_t app_tx, app_rx;
+        wire_stats_t stats;
+        timings_t tm;
+        wire_stats_init(&stats);
+        timings_init(&tm);
+        if(handshake_server(fd, kem_name, cred, cred_len, sk, &app_tx, &app_rx, &stats, &tm) != KEM_SUCCESS){
+            fprintf(stderr, "[gateway] handshake failed (connection %ld)\n");
+            transport_close(fd);
+            continue;
+        }
+    }
+    int bfd = transport_client_connect(BROKER_HOST, BROKER_PORT);
+    if(bfd < 0){
+        fprintf(stderr, "[gateway] cannot connect to broker (connection %ld)\n", i);
+    }else{
+        if(relay(fd, bfd, &app_tx, &app_rx) != 0) fprintf(stderr, "[gateway] relay error (connection %ld)\n", i);
+        transport_close(bfd);
+    }
+    metrics_csv_row(stdout, kem_name, "gateway", (int)i, &tm, &stats);
+    fflush(stdout);
+    record_clear(&app_tx);
+    record_clear(&app_rx);
+    transport_close(fd);
+}
+transport_close(lfd);
+wc_ForceZero(sk, sk_len);
+free(sk);
+return 0;
 }
