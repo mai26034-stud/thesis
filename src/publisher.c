@@ -86,3 +86,29 @@ static int one_session(const char *kem_name, const char *host, uint16_t port, co
   transport_close(fd);
   return (r == KEM_SUCCESS) ? 0 : 1;
 }
+
+int main(int argc, char **argv){
+  if(argc != 6){
+    fprintf(stderr, "usage: %s <KEM> <host> <port> <ca.pub> <connections>\n", argv[0]);
+    return 1;
+  }
+  long port, count;
+  if(parse_num(argv[3], 1, 65535, &port) != 0 || parse_num(argv[5], 1, 1000000, &count) != 0){
+    fprintf(stderr, "[publisher] FAIL: bad port or connection count\n";
+    return 1;
+  }
+  signal(SIGPIPE, SIG_IGN);
+  uint8_t ca_pub[CA_PUB_LEN];
+  size_t got = 0;
+  if(file_read(argv[4], ca_pub, sizeof(ca_pub), &got) != KEM_SUCCESS || got != CA_PUB_LEN){
+    fprintf(stderr, "[publisher] FAIL: can not read CA publik key\n";
+    return 1;
+  }
+  metrics_csv_header(stdout);
+  fflush(stdout);
+  int failures = 0;
+  for(long i = 1; i <= count; i++){
+    failures += one_session(argv[1], argv[2], (uint16_t)port, ca_pub, (int)i);
+  }
+  return (failures > 0) ? 1 : 0;
+}
