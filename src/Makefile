@@ -37,6 +37,9 @@ mqtt_smoke: mqtt_smoke.c mqtt.c transport.c
 provision: provision.c files.c credential.c kem.c kem_oqs.c kem_x25519.c kem_hybrid.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
 
+gateway: gateway.c files.c $(CORE)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
+
 clean:
 	rm -f test_kem test_ks test_wire test_transport test_handshake test_baseline test_mqtt mqtt_smoke *.o test_record provision
 
