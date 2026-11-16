@@ -5,7 +5,7 @@ LIBS = -lwolfssl -loqs -lm
 
 CORE = kem.c kem_oqs.c kem_x25519.c kem_hybrid.c transcript.c keyschedule.c wire.c metrics.c credential.c transport.c handshake.c record.c channel.c
 
-all: test_kem test_ks test_wire test_transport test_handshake test_baseline test_mqtt mqtt_smoke test_record provision
+all: test_kem test_ks test_wire test_transport test_handshake test_baseline test_mqtt mqtt_smoke test_record provision gateway publisher
 
 test_kem: test_kem.c kem.c kem_oqs.c kem_x25519.c kem_hybrid.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
@@ -41,6 +41,6 @@ gateway: gateway.c files.c $(CORE)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
 
 clean:
-	rm -f test_kem test_ks test_wire test_transport test_handshake test_baseline test_mqtt mqtt_smoke *.o test_record provision
+	rm -f test_kem test_ks test_wire test_transport test_handshake test_baseline test_mqtt mqtt_smoke *.o test_record provision gateway publisher
 
 .PHONY: all clean
