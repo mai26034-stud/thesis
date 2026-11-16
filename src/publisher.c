@@ -63,7 +63,7 @@ static int one_session(const char *kem_name, const char *host, uint16_t port, co
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
     unsigned long long ms = (unsigned long long)ts.tv_sec *1000ULL + (unsigned long long)(ts.tv_nsec/1000000);
-    int plen = snprintf(payload, sizeof(payload), "{\"e\":[{\"v\":%.1f}],\"tmstp\":%llu}}", 23.4, ms);
+    int plen = snprintf(payload, sizeof(payload), "{\"e\":[{\"v\":%.1f}],\"tmstp\":%llu}", 23.4, ms);
     if(plen <= 0 || (size_t)plen >= sizeof(payload)) r = KEM_ERROR;
     if(r == KEM_SUCCESS) r = mqtt_build_publish(TOPIC, (const uint8_t *)payload, (size_t)plen, 1, packet_id, pkt, sizeof(pkt), &pkt_len);
   }
