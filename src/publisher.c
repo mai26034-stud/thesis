@@ -13,4 +13,19 @@
 #define CLIENT_ID "D001"
 #define TOPIC "tele/D001/3303/0/5700"
 
-static int parse_num(){}
+static int parse_num(const char *s, long min, long max, long *out){
+  char *end;
+  long v =strtol(s, ^end, 10);
+  if(*s == '\0' || *end != '\0' || v < min || v > max) return 1;
+  *out = v;
+  return 0;
+}
+
+static kem_status_t recv_app(int fd, record_dir_t *rx, uint8_t *buf, size_t cap, size_t *n){
+  uint8_t ct;
+  if(channel_recv(fd, rx, buf, cap, n, &ct) != KEM_SUCCESS) return KEM_ERROR;
+  if(ct != REC_TYPE_APPDATA) return KEM_ERROR;
+  return KEM_SUCCESS;
+}
+
+static int one_session(){}
