@@ -48,4 +48,29 @@ static int relay(int dev_fd, int broker_fd, record_dir_t *tx, record_dir_t *rx){
     }
 }
 
-int main(int argc, char **argv){}
+int main(int argc, char **argv){
+    if(argc < 4 || argc > 5){
+        fprintf(stderr, "usage: %s <KEM> <port> <keys_dir> [connections]\n", argv[0]);
+        return 1;
+    }
+    const char *kem_name = argv[1];
+    const char *dir = argv[3];
+    long port;
+    long count = 0;
+    if(parse_num(argv[2], 1, 65535, &port) != 0 || (argc == 5 && parse_num(argv[4], 0, 1000000, &count))){
+        fprintf(stderr, "[gateway] FAIL: bad port or connection count\n");
+        return 1;
+    }
+    signal(SIGPIPE, SIG_IGN);
+    kem_t *k = kem_open(kem_name);
+    if(k == NULL){
+        fprintf(stderr, "[gateway] FAIL: unkNown KEM %s\n", kem_name);
+        return 1;
+    }
+    size_t sk_len = kem_sk_len(k);
+    kem_close(k);
+    char path[512];
+    uint8_t cred[6 + CRED_MAX_IDENTITY + CRED_MAX_KEM_PK + CA_SIG_MAX];
+    size_t cred_len = 0;
+    size_t got = 0;
+}
