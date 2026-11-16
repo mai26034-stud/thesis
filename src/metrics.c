@@ -21,6 +21,6 @@ void metrics_csv_header(FILE *f){
 
 void metrics_csv_row(FILE *f, const char *config, const char *role, int iteration, const timings_t *tm, const wire_stats_t *st){
   if(f == NULL || config == NULL || role == NULL || tm == NULL || st == NULL) return;
-  fprintf(f, "%s,%s,%d,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%zu,%zu,%zu\n", config, role, iteration, (unsigned long long)tm->eph_keypair_ns, (unsigned long long)tm->eph_encaps_ns, (unsigned long long)tm->eph_decaps_ns, (unsigned long long)tm->cred_verify_ns, (unsigned long long)tm->auth_encaps_ns, (unsigned long long)tm->auth_decaps_ns, (unsigned long long)tm->key_schedule_ns, (unsigned long long)tm->total_ns, (unsigned long long)tm->client_ready_ns, st->total_bytes,st->bytes_by_type[WIRE_CLIENT_AUTH],st->bytes_by_type[WIRE_SERVER_AUTH]);
+  fprintf(f, "%s,%s,%d,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%zu,%zu,%zu\n", config, role, iteration, (unsigned long long)tm->eph_keypair_ns, (unsigned long long)tm->eph_encaps_ns, (unsigned long long)tm->eph_decaps_ns, (unsigned long long)tm->cred_verify_ns, (unsigned long long)tm->auth_encaps_ns, (unsigned long long)tm->auth_decaps_ns, (unsigned long long)tm->key_schedule_ns, (unsigned long long)tm->total_ns, (unsigned long long)tm->client_ready_ns, (unsigned long long)tm->puback_ns,st->total_bytes,st->bytes_by_type[WIRE_CLIENT_AUTH],st->bytes_by_type[WIRE_SERVER_AUTH]);
   return;
 }
