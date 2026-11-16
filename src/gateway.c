@@ -57,14 +57,14 @@ int main(int argc, char **argv){
     const char *dir = argv[3];
     long port;
     long count = 0;
-    if(parse_num(argv[2], 1, 65535, &port) != 0 || (argc == 5 && parse_num(argv[4], 0, 1000000, &count))){
+    if(parse_num(argv[2], 1, 65535, &port) != 0 || (argc == 5 && parse_num(argv[4], 0, 1000000, &count) != 0)){
         fprintf(stderr, "[gateway] FAIL: bad port or connection count\n");
         return 1;
     }
     signal(SIGPIPE, SIG_IGN);
     kem_t *k = kem_open(kem_name);
     if(k == NULL){
-        fprintf(stderr, "[gateway] FAIL: unkNown KEM %s\n", kem_name);
+        fprintf(stderr, "[gateway] FAIL: unknown KEM %s\n", kem_name);
         return 1;
     }
     size_t sk_len = kem_sk_len(k);
@@ -82,13 +82,13 @@ int main(int argc, char **argv){
         return 1;
     }
     int n2 = snprintf(path, sizeof(path), "%s/%s.sk", dir, kem_name);
-    if(n2 <= 0 || (size_t)n2 >= sizeof(path) || file_read(path, sk, sk_len, &got) != KEM_SUCCESS){
+    if(n2 <= 0 || (size_t)n2 >= sizeof(path) || file_read(path, sk, sk_len, &got) != KEM_SUCCESS || got != sk_len){
         fprintf(stderr, "[gateway] FAIL: can not read secret key\n");
         wc_ForceZero(sk, sk_len);
         free(sk);
         return 1;
     }
-    int lfd = transport_listen((uint16_t));
+    int lfd = transport_listen((uint16_t)port);
     if(lfd < 0){
         fprintf(stderr, "[gateway] FAIL: listen on port %ld\n", port);
         wc_ForceZero(sk, sk_len);
@@ -106,11 +106,10 @@ int main(int argc, char **argv){
         wire_stats_init(&stats);
         timings_init(&tm);
         if(handshake_server(fd, kem_name, cred, cred_len, sk, &app_tx, &app_rx, &stats, &tm) != KEM_SUCCESS){
-            fprintf(stderr, "[gateway] handshake failed (connection %ld)\n");
+            fprintf(stderr, "[gateway] handshake failed (connection %ld)\n", i);
             transport_close(fd);
             continue;
         }
-    }
     int bfd = transport_client_connect(BROKER_HOST, BROKER_PORT);
     if(bfd < 0){
         fprintf(stderr, "[gateway] cannot connect to broker (connection %ld)\n", i);
