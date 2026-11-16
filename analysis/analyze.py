@@ -5,7 +5,7 @@ from scipy import stats
 df1 = pd.read_csv("../src/results.csv")
 df2 = pd.read_csv("../src/baseline.csv")
 df = pd.concat([df1, df2], ignore_index=True)
-time_cols = ["eph_keypair_ns", "eph_encaps_ns", "eph_decaps_ns", "cred_verify_ns", "auth_encaps_ns", "auth_decaps_ns", "key_schedule_ns", "total_ns", "client_ready_ns"]
+time_cols = ["eph_keypair_ns", "eph_encaps_ns", "eph_decaps_ns", "cred_verify_ns", "auth_encaps_ns", "auth_decaps_ns", "key_schedule_ns", "total_ns", "client_ready_ns", "puback_ns"]
 
 def ci95(s):
     n = len(s)
