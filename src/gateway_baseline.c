@@ -51,7 +51,7 @@ int main(int argc, char **argv){
   long port;
   long count = 0;
   if(parse_num(argv[1], 1, 65535, &port) != 0 || (argc == 4 && parse_num(argv[3], 0, 1000000, &count) != 0)){
-    fprintf(stderr, "[getaway baseline] FAIL: bad port or connection count\n");
+    fprintf(stderr, "[gateway baseline] FAIL: bad port or connection count\n");
     return 1;
   }
   char cert[512];
@@ -59,20 +59,20 @@ int main(int argc, char **argv){
   int n1 = snprintf(cert, sizeof(cert), "%s/server-cert.pem", argv[2]);
   int n2 = snprintf(key, sizeof(key), "%s/server-key.pem", argv[2]);
   if(n1 <= 0 || (size_t)n1 >= sizeof(cert) || n2 <= 0 || (size_t)n2 >= sizeof(key)){
-    fprintf(stderr, "[getaway baseline] FAIL: path too long\n");
+    fprintf(stderr, "[gateway baseline] FAIL: path too long\n");
     return 1;
   }
   signal(SIGPIPE, SIG_IGN);
   wolfSSL_Init();
   WOLFSSL_CTX *ctx = baseline_server_ctx(cert, key);
   if(ctx == NULL){
-    fprintf(stderr, "[getaway baseline] FAIL: can not load certificate or key\n");
+    fprintf(stderr, "[gateway baseline] FAIL: can not load certificate or key\n");
     wolfSSL_Cleanup();
     return 1;
   }
   int lfd = transport_listen((uint16_t)port);
   if(lfd < 0){
-    fprintf(stderr, "[getaway baseline] FAIL: can not load certificate or key\n");
+    fprintf(stderr, "[gateway baseline] FAIL: listen on port %ld\n", port);
     wolfSSL_CTX_free(ctx);
     wolfSSL_Cleanup();
     return 1;
@@ -88,15 +88,15 @@ int main(int argc, char **argv){
     wire_stats_init(&stats);
     timings_init(&tm);
     if(baseline_accept(ctx, fd, &conn, &stats, &tm) != KEM_SUCCESS){
-      fprintf(stderr, "[getaway baseline] handshake failed (connection %ld)\n", i);
+      fprintf(stderr, "[gateway baseline] handshake failed (connection %ld)\n", i);
       transport_close(fd);
-      return 1;
+      continue;
     }
     int bfd = transport_client_connect(BROKER_HOST, BROKER_PORT);
     if(bfd < 0){
-      fprintf(stderr, "[getaway baseline] can not connect to broker (connection %ld)\n", i);
+      fprintf(stderr, "[gateway baseline] can not connect to broker (connection %ld)\n", i);
     }else{
-      if(relay(&conn, bfd) != 0) fprintf(stderr, "[getaway baseline] relay error (connection %ld)\n", i);
+      if(relay(&conn, bfd) != 0) fprintf(stderr, "[gateway baseline] relay error (connection %ld)\n", i);
       transport_close(bfd);
     }
     metrics_csv_row(stdout, "baseline", "gateway", (int)i, &tm, &stats);
