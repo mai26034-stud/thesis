@@ -34,7 +34,7 @@ static int one_session(WOLFSSL_CTX *ctx, const char *host, uint16_t port, int it
   baseline_conn_t conn;
   wire_stats_t stats;
   timings_t tm;
-  wire_stats_init(&conn);
+  wire_stats_init(&stats);
   timings_init(&tm);
   if(mqtt_build_connect(CLIENT_ID, 60, connect_pkt, sizeof(connect_pkt), &connect_len) != KEM_SUCCESS) return 1;
   uint64_t t_start = metrics_now();
@@ -57,7 +57,7 @@ static int one_session(WOLFSSL_CTX *ctx, const char *host, uint16_t port, int it
     clock_gettime(CLOCK_REALTIME, &ts);
     unsigned long long ms = (unsigned long long)ts.tv_sec * 1000ULL + (unsigned long long)(ts.tv_nsec/1000000);
     int plen = snprintf(payload, sizeof(payload), "{\"e\":[{\"v\":%.1f}],\"tmstp\":%llu}", 23.4, ms);
-    if(plen <= 0 || (size_t)plen >= sizeof(paylod)) r = KEM_ERROR;
+    if(plen <= 0 || (size_t)plen >= sizeof(payload)) r = KEM_ERROR;
     if(r == KEM_SUCCESS) r = mqtt_build_publish(TOPIC, (const uint8_t *)payload, (size_t)plen, 1, packet_id, pkt, sizeof(pkt), &pkt_len);
   }
   if(r == KEM_SUCCESS) r = baseline_write(&conn, pkt, pkt_len);
@@ -86,7 +86,7 @@ int main(int argc, char **argv){
   }
   long port, count;
   if(parse_num(argv[2], 1, 65535, &port) != 0 || parse_num(argv[4], 1, 1000000, &count) != 0){
-    fprintf(stderr, "[publisher baseline] FAIL: bad port or connection count\n");
+    fprintf(stderr, "[publisher baseline] handshake failed (iteration %d)\n", iteration);
     return 1;
   }
   signal(SIGPIPE, SIG_IGN);
