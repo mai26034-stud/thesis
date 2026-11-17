@@ -66,7 +66,7 @@ static int one_session(WOLFSSL_CTX *ctx, const char *host, uint16_t port, int it
   if(r == KEM_SUCCESS && pid != packet_id) r = KEM_ERROR;
   if(r == KEM_SUCCESS) tm.puback_ns = metrics_now() - t_start;
   if(r == KEM_SUCCESS){
-    if(mqtt_build_disconnect)pkt, sizeof(pkt), &pkt_len) == KEM_SUCCESS){
+    if(mqtt_build_disconnect(pkt, sizeof(pkt), &pkt_len) == KEM_SUCCESS){
       baseline_write(&conn, pkt, pkt_len);
     }
     metrics_csv_row(stdout, "baseline", "publisher", iteration, &tm, &stats);
@@ -94,6 +94,7 @@ int main(int argc, char **argv){
   WOLFSSL_CTX *ctx = baseline_client_ctx(argv[3]);
   if(ctx == NULL){
     fprintf(stderr, "[publisher baseline] FAIL: can not load CA certificate\n");
+    wolfSSL_Cleanup();
     return 1;
   }
   metrics_csv_header(stdout);
