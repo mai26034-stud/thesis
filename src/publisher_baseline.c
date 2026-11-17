@@ -44,7 +44,7 @@ static int one_session(WOLFSSL_CTX *ctx, const char *host, uint16_t port, int it
     return 1;
   }
   if(baseline_connect(ctx, fd, &conn, &stats, &tm) != KEM_SUCCESS){
-    fprintf(stderr, "[publisher baseline] headline failed (iteration %d)\n", iteration);
+    fprintf(stderr, "[publisher baseline] handshake failed (iteration %d)\n", iteration);
     transport_close(fd);
     return 1;
   }
