@@ -5,7 +5,7 @@ LIBS = -lwolfssl -loqs -lm
 
 CORE = kem.c kem_oqs.c kem_x25519.c kem_hybrid.c transcript.c keyschedule.c wire.c metrics.c credential.c transport.c handshake.c record.c channel.c
 
-all: test_kem test_ks test_wire test_transport test_handshake test_baseline test_mqtt mqtt_smoke test_record provision gateway publisher
+all: test_kem test_ks test_wire test_transport test_handshake test_baseline test_mqtt mqtt_smoke test_record provision gateway publisher gateway_baseline publisher_baseline
 
 test_kem: test_kem.c kem.c kem_oqs.c kem_x25519.c kem_hybrid.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
@@ -43,7 +43,13 @@ gateway: gateway.c files.c $(CORE)
 publisher: publisher.c files.c mqtt.c $(CORE)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
 
+gateway_baseline: gateway_baseline.c baseline.c transport.c wire.c metrics.c
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) -lwolfssl -lm
+
+publisher_headline: publisher_baseline.c baseline.c transport.c wire.c metrics.c mqtt.c
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) -lwolfssl -lm
+
 clean:
-	rm -f test_kem test_ks test_wire test_transport test_handshake test_baseline test_mqtt mqtt_smoke *.o test_record provision gateway publisher
+	rm -f test_kem test_ks test_wire test_transport test_handshake test_baseline test_mqtt mqtt_smoke *.o test_record provision gateway publisher gateway_baseline publisher_baseline
 
 .PHONY: all clean
