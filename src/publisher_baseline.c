@@ -44,7 +44,7 @@ static int one_session(WOLFSSL_CTX *ctx, const char *host, uint16_t port, int it
     return 1;
   }
   if(baseline_connect(ctx, fd, &conn, &stats, &tm) != KEM_SUCCESS){
-    fprintf(stderr, "[publisher baseline] connect failed (iteration %d)\n", iteration);
+    fprintf(stderr, "[publisher baseline] headline failed (iteration %d)\n", iteration);
     transport_close(fd);
     return 1;
   }
@@ -86,7 +86,7 @@ int main(int argc, char **argv){
   }
   long port, count;
   if(parse_num(argv[2], 1, 65535, &port) != 0 || parse_num(argv[4], 1, 1000000, &count) != 0){
-    fprintf(stderr, "[publisher baseline] handshake failed (iteration %d)\n", iteration);
+    fprintf(stderr, "[publisher baseline] FAIL: bad port or connection count\n");
     return 1;
   }
   signal(SIGPIPE, SIG_IGN);
