@@ -46,7 +46,7 @@ publisher: publisher.c files.c mqtt.c $(CORE)
 gateway_baseline: gateway_baseline.c baseline.c transport.c wire.c metrics.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) -lwolfssl -lm
 
-publisher_headline: publisher_baseline.c baseline.c transport.c wire.c metrics.c mqtt.c
+publisher_baseline: publisher_baseline.c baseline.c transport.c wire.c metrics.c mqtt.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) -lwolfssl -lm
 
 clean:
