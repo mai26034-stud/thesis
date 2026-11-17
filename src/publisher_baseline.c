@@ -53,6 +53,56 @@ static int one_session(WOLFSSL_CTX *ctx, const char *host, uint16_t port, int it
   if(r == KEM_SUCCESS) r = mqtt_parse_connack(resp, n, &rc);
   if(r == KEM_SUCCESS && rc != 0) r = KEM_ERROR;
   if(r == KEM_SUCCESS){
-    
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    unsigned long long ms = (unsigned long long)ts.tv_sec * 1000ULL + (unsigned long long)(ts.tv_nsec/1000000);
+    int plen = snprintf(payload, sizeof(payload), "{\"e\":[{\"v\":%.1f}],\"tmstp\":%llu}", 23.4, ms);
+    if(plen <= 0 || (size_t)plen >= sizeof(paylod)) r = KEM_ERROR;
+    if(r == KEM_SUCCESS) r = mqtt_build_publish(TOPIC, (const uint8_t *)payload, (size_t)plen, 1, packet_id, pkt, sizeof(pkt), &pkt_len);
   }
+  if(r == KEM_SUCCESS) r = baseline_write(&conn, pkt, pkt_len);
+  if(r == KEM_SUCCESS) r = baseline_read(&conn, resp, sizeof(resp), &n);
+  if(r == KEM_SUCCESS) r = mqtt_parse_puback(resp, n, &pid);
+  if(r == KEM_SUCCESS && pid != packet_id) r = KEM_ERROR;
+  if(r == KEM_SUCCESS) tm.puback_ns = metrics_now() - t_start;
+  if(r == KEM_SUCCESS){
+    if(mqtt_build_disconnect)pkt, sizeof(pkt), &pkt_len) == KEM_SUCCESS){
+      baseline_write(&conn, pkt, pkt_len);
+    }
+    metrics_csv_row(stdout, "baseline", "publisher", iteration, &tm, &stats);
+    fflush(stdout);
+  }else{
+    fprintf(stderr, "[publisher baseline] MQTT exchange failed (iteration %d)\n", iteration);
+  }
+  baseline_free(&conn);
+  transport_close(fd);
+  return (r == KEM_SUCCESS) ? 0 : 1;
+}
+
+int main(int argc, char **argv){
+  if(argc != 5){
+    fprintf(stderr, "usage: %s <host> <port> <ca_cert.pem> <connections>\n", argv[0]);
+    return 1;
+  }
+  long port, count;
+  if(parse_num(argv[2], 1, 65535, &port) != 0 || parse_num(argv[4], 1, 1000000, &count) != 0){
+    fprintf(stderr, "[publisher baseline] FAIL: bad port or connection count\n");
+    return 1;
+  }
+  signal(SIGPIPE, SIG_IGN);
+  wolfSSL_Init();
+  WOLFSSL_CTX *ctx = baseline_client_ctx(argv[3]);
+  if(ctx == NULL){
+    fprintf(stderr, "[publisher baseline] FAIL: can not load CA certificate\n");
+    return 1;
+  }
+  metrics_csv_header(stdout);
+  fflush(stdout);
+  int failures = 0;
+  for(long i = 1; i <= count; i++){
+    failures += one_session(ctx, argv[1], (uint16_t)port, (int)i);
+  }
+  wolfSSL_CTX_free(ctx);
+  wolfSSL_Cleanup();
+  return (failures > 0) ? 1 : 0;
 }
