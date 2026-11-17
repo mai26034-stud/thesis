@@ -16,3 +16,5 @@ src/provision
 keys/
 src/gateway
 src/publisher
+src/gateway_baseline
+src/publisher_baseline
