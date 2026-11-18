@@ -1,10 +1,15 @@
+import sys
 import pandas as pd
 import numpy as np
 from scipy import stats
 
-df1 = pd.read_csv("../src/results.csv")
-df2 = pd.read_csv("../src/baseline.csv")
-df = pd.concat([df1, df2], ignore_index=True)
+if len(sys.argv) > 1:
+    df = pd.read_csv(sys.argv[1])
+    df = df[df["warmup"] == 0]
+else:
+    df1 = pd.read_csv("../src/results.csv")
+    df2 = pd.read_csv("../src/baseline.csv")
+    df = pd.concat([df1,df2], ignore_index=True)
 time_cols = ["eph_keypair_ns", "eph_encaps_ns", "eph_decaps_ns", "cred_verify_ns", "auth_encaps_ns", "auth_decaps_ns", "key_schedule_ns", "total_ns", "client_ready_ns", "puback_ns", "cpu_ns"]
 
 def ci95(s):
@@ -21,6 +26,9 @@ byts = df.groupby(["config", "role"])[["bytes_total", "bytes_client_auth", "byte
 pd.set_option("display.width", 250)
 pd.set_option("display.max_columns", 50)
 
+print("===== SAMPLES (n) =====")
+print(df.groupby(["config","role"]).size())
+print()
 print("===== MEDIAN (ns) =====")
 print(med)
 print("\n===== MEAN (ns) =====")
