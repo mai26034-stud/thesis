@@ -6,6 +6,7 @@ ROUNDS=${ROUNDS:-10}
 WARMUP=${WARMUP:-2}
 PER_ROUND=${PER_ROUND:-10}
 PORT=${PORT:-19500}
+NETIF=${NETIF:-lo}
 LABEL=${1:-$(date +%Y%m%d-%H%M%S)}
 
 cd "$(dirname "$0")/.." || exit 1
@@ -36,6 +37,7 @@ mkdir -p "$OUT"
      echo "commit: $(git rev-parse --short HEAD 2>/dev/null || echo n/a)"
      echo "host: $(uname -a)"
      echo "governor: $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo n/a)"
+     echo "qdisc: $(tc qdisc show dev "$NETIF" 2>/dev/null | tr '\n' ';')"
      echo "rounds=$ROUNDS warmup=$WARMUP per_round=$PER_ROUND port=$PORT"
 } > "$OUT/meta.txt"
 
