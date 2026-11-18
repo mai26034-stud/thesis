@@ -71,9 +71,11 @@ static kem_status_t conn_new(WOLFSSL_CTX *ctx, int fd, baseline_conn_t *c){
 kem_status_t baseline_accept(WOLFSSL_CTX *ctx, int fd, baseline_conn_t *c, wire_stats_t *stats, timings_t *tm){
     if(stats == NULL || tm == NULL) return KEM_ERROR;
     if(conn_new(ctx, fd, c) != KEM_SUCCESS) return KEM_ERROR;
+    uint64_t c0 = metrics_cpu_now();
     uint64_t t0 = metrics_now();
     int ret = wolfSSL_accept(c->ssl);
     tm->total_ns = metrics_now() - t0;
+    tm->cpu_ns = metrics_cpu_now() - c0;
     if(ret != WOLFSSL_SUCCESS){
         baseline_free(c);
         return KEM_ERROR;
@@ -85,9 +87,11 @@ kem_status_t baseline_accept(WOLFSSL_CTX *ctx, int fd, baseline_conn_t *c, wire_
 kem_status_t baseline_connect(WOLFSSL_CTX *ctx, int fd, baseline_conn_t *c, wire_stats_t *stats, timings_t *tm){
     if(stats == NULL || tm == NULL) return KEM_ERROR;
     if(conn_new(ctx, fd, c) != KEM_SUCCESS) return KEM_ERROR;
+    uint64_t c0 = metrics_cpu_now();
     uint64_t t0 = metrics_now();
     int ret = wolfSSL_connect(c->ssl);
     tm->total_ns = metrics_now() - t0;
+    tm->cpu_ns = metrics_cpu_now() - c0;
     tm->client_ready_ns = tm->total_ns;
     if(ret != WOLFSSL_SUCCESS){
         baseline_free(c);
