@@ -18,3 +18,5 @@ src/gateway
 src/publisher
 src/gateway_baseline
 src/publisher_baseline
+results/
+src/vg*.txt
