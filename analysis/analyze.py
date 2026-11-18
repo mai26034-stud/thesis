@@ -58,16 +58,16 @@ cert_der = der_len_from_pem(SERVER_CERT)
 rows = []
 for cfg in sorted(df["config"].unique()):
     try:
-        c_tot = b_loc[(cfg,"client"),"bytes_total"]
-        s_tot = b_loc[(cfg,"server"),"bytes_total"]
+        c_tot = b.loc[(cfg,"client"),"bytes_total"]
+        s_tot = b.loc[(cfg,"server"),"bytes_total"]
     except KeyError:
         continue
     if cfg == "baseline":
         auth = cert_der + ECDSA_P256_SIG
         source = "computed"
     else:
-        c_auth = b_loc[(cfg,"client"),"bytes_client_auth"] - AUTHKEM_RECORD_OVERHEAD
-        s_auth = b_loc[(cfg,"server"),"bytes_server_auth"] - AUTHKEM_RECORD_OVERHEAD
+        c_auth = b.loc[(cfg,"client"),"bytes_client_auth"] - AUTHKEM_RECORD_OVERHEAD
+        s_auth = b.loc[(cfg,"server"),"bytes_server_auth"] - AUTHKEM_RECORD_OVERHEAD
         auth = c_auth + s_auth
         source = "measured"
     total =c_tot + s_tot
