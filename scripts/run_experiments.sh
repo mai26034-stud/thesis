@@ -23,16 +23,17 @@ for b in gateway publisher gateway_baseline publisher_baseline; do
 done
 if [ ! -f "$ROOT/keys/ca.pub" ]; then
      echo "missing keys (run src/provision keys)" >&2
-     exit
+     exit 1
 fi
-     if ! ss -ltn | grep -q ":1883 " >&2
+if ! ss -ltn | grep -q ":1883 "; then
+     echo "mosquitto is not listening on port 1883" >&2
      exit 1
 fi
 
 mkdir -p "$OUT"
 {
      echo "date: $(date -Is)"
-     echo "commit: $(git rev-parse --short HEAD 2>/dev/null || echo n/a"
+     echo "commit: $(git rev-parse --short HEAD 2>/dev/null || echo n/a)"
      echo "host: $(uname -a)"
      echo "governor: $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo n/a)"
      echo "rounds=$ROUNDS warmup=$WARMUP per_round=$PER_ROUND port=$PORT"
@@ -71,22 +72,22 @@ for round in $(seq 1 "$ROUNDS"); do
                FAILURES=$((FAILURES + 1))
                continue
           fi
-          if[ "$cfg" = "baseline" ]; then
+          if [ "$cfg" = "baseline" ]; then
                "$BIN/publisher_baseline" 127.0.0.1 "$PORT" "$ROOT/certs/ca-cert.pem" "$TOTAL" > "$PUB_CSV" 2>> "$OUT/errors.log"
           else
                "$BIN/publisher" "$cfg" 127.0.0.1 "$PORT" "$ROOT/keys/ca.pub" "$TOTAL" > "$PUB_CSV" 2>> "$OUT/errors.log"
           fi
           pub_rc=$?
-          if[ "$pub_rc" -ne 0 ]; then
+          if [ "$pub_rc" -ne 0 ]; then
                kill "$gw_pid" 2>/dev/null
           fi
           wait "$gw_pid"
           gw_rc=$?
-          if[ "$pub_rc" -ne 0 ] || [ "$gw_rc" -ne 0 ]; then
+          if [ "$pub_rc" -ne 0 ] || [ "$gw_rc" -ne 0 ]; then
                echo "round $round $cfg: publisher=$pub_rc gateway=$gw_rc" >> "$OUT/errors.log"
                FAILURES=$((FAILURES + 1))
           fi
-          if[ "$HEADER_DONE" -eq 0 ] && [ -s "$PUB_CSV" ]; then
+          if [ "$HEADER_DONE" -eq 0 ] && [ -s "$PUB_CSV" ]; then
                echo "round,warmup,$(head -1 "$PUB_CSV")" > "$OUT/raw.csv"
                HEADER_DONE=1
           fi
@@ -97,7 +98,7 @@ for round in $(seq 1 "$ROUNDS"); do
 done
 rm -f "$GW_CSV" "$PUB_CSV"
 echo "results: $OUT/raw.csv (failures: $FAILURES)"
-if[ "FAILURES" -gt 0 ]; then
+if [ "$FAILURES" -gt 0 ]; then
      exit 1
 fi
 exit 0
