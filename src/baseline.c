@@ -3,12 +3,23 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <errno.h>
+#include <wolfssl/error-ssl.h>
+
+static int io_error(int sending){
+    if(errno == EAGAIN || errno == EWOULDBLOCK) return sending ? WOLFSSL_CBIO_ERR_WANT_WRITE : WOLFSSL_CBIO_ERR_WANT_READ;
+    if(errno == EINTR) return WOLFSSL_CBIO_ERR_ISR;
+    if(errno == ECONNRESET) return WOLFSSL_CBIO_ERR_CONN_RST;
+    if(errno == EPIPE || errno == ECONNABORTED) return WOLFSSL_CBIO_ERR_CONN_CLOSE;
+    return WOLFSSL_CBIO_ERR_GENERAL;
+}
 
 static int my_send(WOLFSSL *ssl, char *buf, int sz, void *ctx){
     io_ctx_t *io = (io_ctx_t *)ctx;
     (void)ssl;
     int n = (int)send(io->fd, buf, (size_t)sz, 0);
-    if(n > 0) io->bytes_sent += (size_t)n;
+    if(n < 0) return io_error(1);
+    io->bytes_sent += (size_t)n;
     return n;
 }
 
@@ -16,7 +27,9 @@ static int my_recv(WOLFSSL *ssl, char *buf, int sz, void *ctx){
     io_ctx_t *io = (io_ctx_t *)ctx;
     (void)ssl;
     int n = (int)recv(io->fd, buf, (size_t)sz, 0);
-    if(n > 0) io->bytes_recv += (size_t)n;
+    if(n == 0) return WOLFSSL_CBIO_ERR_CONN_CLOSE;
+    if(n < 0) return io_error(0);
+    io->bytes_recv += (size_t)n;
     return n;
 }
 

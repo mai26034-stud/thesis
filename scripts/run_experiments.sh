@@ -7,6 +7,7 @@ WARMUP=${WARMUP:-2}
 PER_ROUND=${PER_ROUND:-10}
 PORT=${PORT:-19500}
 NETIF=${NETIF:-lo}
+TIMEOUT=${TIMEOUT:-300}
 LABEL=${1:-$(date +%Y%m%d-%H%M%S)}
 
 cd "$(dirname "$0")/.." || exit 1
@@ -38,7 +39,7 @@ mkdir -p "$OUT"
      echo "host: $(uname -a)"
      echo "governor: $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo n/a)"
      echo "qdisc: $(tc qdisc show dev "$NETIF" 2>/dev/null | tr '\n' ';')"
-     echo "rounds=$ROUNDS warmup=$WARMUP per_round=$PER_ROUND port=$PORT"
+     echo "rounds=$ROUNDS warmup=$WARMUP per_round=$PER_ROUND port=$PORT timeout=$TIMEOUT"
 } > "$OUT/meta.txt"
 
 wait_port(){
@@ -59,12 +60,14 @@ FAILURES=0
 GW_CSV="$OUT/.gateway.csv"
 PUB_CSV="$OUT/.publisher.csv"
 
+trap 'pkill -P $$; exit 130' INT TERM
+
 for round in $(seq 1 "$ROUNDS"); do
      for cfg in $(shuf -e "${CONFIGS[@]}"); do
           if [ "$cfg" = "baseline" ]; then
-               "$BIN/gateway_baseline" "$PORT" "$ROOT/certs" "$TOTAL" > "$GW_CSV" 2>> "$OUT/errors.log" &
+               timeout "$TIMEOUT" "$BIN/gateway_baseline" "$PORT" "$ROOT/certs" "$TOTAL" > "$GW_CSV" 2>> "$OUT/errors.log" &
           else
-               "$BIN/gateway" "$cfg" "$PORT" "$ROOT/keys" "$TOTAL" > "$GW_CSV" 2>> "$OUT/errors.log" &
+               timeout "$TIMEOUT" "$BIN/gateway" "$cfg" "$PORT" "$ROOT/keys" "$TOTAL" > "$GW_CSV" 2>> "$OUT/errors.log" &
           fi
           gw_pid=$!
           if ! wait_port; then
@@ -75,9 +78,9 @@ for round in $(seq 1 "$ROUNDS"); do
                continue
           fi
           if [ "$cfg" = "baseline" ]; then
-               "$BIN/publisher_baseline" 127.0.0.1 "$PORT" "$ROOT/certs/ca-cert.pem" "$TOTAL" > "$PUB_CSV" 2>> "$OUT/errors.log"
+               timeout "$TIMEOUT" "$BIN/publisher_baseline" 127.0.0.1 "$PORT" "$ROOT/certs/ca-cert.pem" "$TOTAL" > "$PUB_CSV" 2>> "$OUT/errors.log"
           else
-               "$BIN/publisher" "$cfg" 127.0.0.1 "$PORT" "$ROOT/keys/ca.pub" "$TOTAL" > "$PUB_CSV" 2>> "$OUT/errors.log"
+               timeout "$TIMEOUT" "$BIN/publisher" "$cfg" 127.0.0.1 "$PORT" "$ROOT/keys/ca.pub" "$TOTAL" > "$PUB_CSV" 2>> "$OUT/errors.log"
           fi
           pub_rc=$?
           if [ "$pub_rc" -ne 0 ]; then
