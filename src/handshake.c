@@ -102,6 +102,7 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     transcript_t tr;
     if(transcript_init(&tr) != KEM_SUCCESS) return KEM_ERROR;
     size_t written;
+    uint64_t c_start = metrics_cpu_now()
     uint64_t t_start = metrics_now();
     t0 = metrics_now();
     kem_status_t t = kem_keypair(eph, eph_pk, eph_sk);
@@ -184,6 +185,7 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     tm->key_schedule_ns += metrics_now() - t0;
     if(t != KEM_SUCCESS) return KEM_ERROR;
     tm->total_ns = metrics_now() - t_start;
+    tm->cpu_ns = metrics_cpu_now() - c_start;
     ks_state_clear(&st);
     transcript_free(&tr);
     wc_ForceZero(c_hs, 32);
@@ -235,6 +237,7 @@ kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *
     size_t content_len, total, written;
     transcript_t tr;
     if(transcript_init(&tr) != KEM_SUCCESS) return KEM_ERROR;
+    uint64_t c_start = metrics_cpu_now();
     uint64_t t_start = metrics_now();
     kem_status_t t;
     t = recv_message(fd, msgbuf, sizeof(msgbuf), &type, &content, &content_len, &total);
@@ -297,6 +300,7 @@ kem_status_t handshake_server(int fd, const char *auth_kem_name, const uint8_t *
     tm->key_schedule_ns += metrics_now() - t0;
     if(t != KEM_SUCCESS) return KEM_ERROR;
     tm->total_ns = metrics_now() - t_start;
+    tm->cpu_ns = metrics_cpu_now() - c_start;
     ks_state_clear(&st);
     transcript_free(&tr);
     wc_ForceZero(c_hs, 32);
