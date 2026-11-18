@@ -102,7 +102,7 @@ kem_status_t handshake_client(int fd, const char *auth_kem_name, const uint8_t *
     transcript_t tr;
     if(transcript_init(&tr) != KEM_SUCCESS) return KEM_ERROR;
     size_t written;
-    uint64_t c_start = metrics_cpu_now()
+    uint64_t c_start = metrics_cpu_now();
     uint64_t t_start = metrics_now();
     t0 = metrics_now();
     kem_status_t t = kem_keypair(eph, eph_pk, eph_sk);
