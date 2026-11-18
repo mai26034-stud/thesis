@@ -16,9 +16,12 @@ typedef struct{
     uint64_t total_ns;
     uint64_t client_ready_ns;
     uint64_t puback_ns;
-} timings_t;
+    uint64_t cpu_ns;
+}timings_t;
 
 uint64_t metrics_now(void);
+uint64_t metrics_cpu_now(void);
+long metrics_max_rss_kb(void);
 void timings_init(timings_t *tm);
 void metrics_csv_header(FILE *f);
 void metrics_csv_row(FILE *f, const char *config, const char *role, int iteration, const timings_t *tm, const wire_stats_t *st);
