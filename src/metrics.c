@@ -12,7 +12,7 @@ uint64_t metrics_now(void){
 uint64_t metrics_cpu_now(void){
   struct timespec ts;
   clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts);
-  return (uint64_t)ts..tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
+  return (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
 }
 
 long metrics_max_rss_kb(void){
