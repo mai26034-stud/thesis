@@ -90,3 +90,23 @@ def handshake_bytes(df, out):
   ax.legend(frameon=False, ncol=2, loc="lower left", bbox_to_anchor=(0, 1))
   fig.savefig(out)
   pit.close(fig)
+
+def main():
+  if len(sys.argv) < 3:
+    sys.exit("usage: plots.py <out_dir> <profile>=<raw.csv> [<profile>=<raw.csv> ...]")
+  out = sys.argv[1]
+  os.makedirs(out, exist_ok=True)
+  profiles = []
+  for arg in sys.argv[2:]:
+    if "=" not in arg:
+      sys.exit(f"expected <profile>=<raw.csv>, got: {arg}")
+    name, path = arg.split("=", 1)
+    profiles.append((name, load(path)))
+  latency(profiles, "client_ready_ns", "client ready (ms, log scale)", os.path.join(out, "client_ready.png"))
+  latency(profiles, "puback_ns", "connect to PUBACK (ms, log scale)", os.path.join(out, "puback.png"))
+  cpu(profiles[0][1], os.path.join(out, "cpu.png"))
+  handshake_bytes(profiles[0][1], os.path.join(out, "bytes.png"))
+  print(f"figures written to {out}")
+
+if __name__ == "__main__":
+  main()
