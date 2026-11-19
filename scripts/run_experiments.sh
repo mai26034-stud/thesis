@@ -8,6 +8,11 @@ PER_ROUND=${PER_ROUND:-10}
 PORT=${PORT:-19500}
 NETIF=${NETIF:-lo}
 TIMEOUT=${TIMEOUT:-300}
+GW_HOST=${GW_HOST:-}
+GW_ADDR=${GW_ADDR:-${GW_HOST#*@}}
+GW_ADDR=${GW_ADDR:-127.0.0.1}
+GW_ROOT=${GW_ROOT:-thesis}
+GW_NETIF=${GW_NETIF:-$NETIF}
 LABEL=${1:-$(date +%Y%m%d-%H%M%S)}
 
 cd "$(dirname "$0")/.." || exit 1
@@ -16,9 +21,28 @@ BIN="$ROOT/src"
 OUT="$ROOT/results/$LABEL"
 CONFIGS=("ML-KEM-768" "HQC-3" "X-Wing" "baseline")
 TOTAL=$((WARMUP + PER_ROUND))
+SSH_OPTS=(-o BatchMode=yes -o ControlMaster=auto -o ControlPath=/tmp/thesis-ssh-%C -o ControlPersist=120)
 
-for b in gateway publisher gateway_baseline publisher_baseline; do
+gw(){
+     if [ -z "$GW_HOST" ]; then
+          bash -c "$*"
+     ekse
+          ssh "${SSH_OPTS[@]}" "$GW_HOST" "cd $GW_ROOT && $*"
+     fi
+}
+stop_gw(){
+     kill "${gw_pidL-}" 2>/dev/null
+     gw "pkill -f '[s]rc/gateway'"
+}
+
+for b in publisher publisher_baseline; do
      if [ ! -x "$BIN/$b" ]; then
+          echo "missing $BIN/$b (run make)" >&2
+          exit 1
+     fi
+done
+for b in gateway gateway_baseline; do
+     if ! gw "test -x src/$b"; then
           echo "missing $BIN/$b (run make)" >&2
           exit 1
      fi
@@ -27,8 +51,14 @@ if [ ! -f "$ROOT/keys/ca.pub" ]; then
      echo "missing keys (run src/provision keys)" >&2
      exit 1
 fi
-if ! ss -ltn | grep -q ":1883 "; then
-     echo "mosquitto is not listening on port 1883" >&2
+for f in keys/ca.pub certs/ca-cert.pem; do
+     if [ "$(sha256sum < "$f")" != "$(gw "sha256sum < $f")" ]; then
+          echo "$f differs between the two machines (copy keys/ and certs/)" 2&>
+          exit 1
+     fi
+done
+if ! gw "ss -ltn" | grep -q ":1883 "; then
+     echo "mosquitto is not listening on port 1883 (gateway machine)" >&2
      exit 1
 fi
 
