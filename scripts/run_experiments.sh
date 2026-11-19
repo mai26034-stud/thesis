@@ -53,7 +53,7 @@ if [ ! -f "$ROOT/keys/ca.pub" ]; then
 fi
 for f in keys/ca.pub certs/ca-cert.pem; do
      if [ "$(sha256sum < "$f")" != "$(gw "sha256sum < $f")" ]; then
-          echo "$f differs between the two machines (copy keys/ and certs/)" &2>
+          echo "$f differs between the two machines (copy keys/ and certs/)" >&2
           exit 1
      fi
 done
@@ -73,7 +73,7 @@ mkdir -p "$OUT"
           echo "gateway: $GW_HOST (addr $GW_ADDR)"
           echo "gateway commit: $(gw "git rev-parse --short HEAD 2>/dev/null || echo n/a")"
           echo "gateway host: $(gw "uname -a")"
-          echo "gateway governor: $(gw "cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo n/a")
+          echo "gateway governor: $(gw "cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo n/a")"
           echo "gateway qdisc: $(gw "tc qdisc show dev $GW_NETIF 2>/dev/null" | tr '\n' ';')"
      fi
      echo "rounds=$ROUNDS warmup=$WARMUP per_round=$PER_ROUND port=$PORT timeout=$TIMEOUT"
