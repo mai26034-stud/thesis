@@ -26,12 +26,12 @@ SSH_OPTS=(-o BatchMode=yes -o ControlMaster=auto -o ControlPath=/tmp/thesis-ssh-
 gw(){
      if [ -z "$GW_HOST" ]; then
           bash -c "$*"
-     ekse
+     else
           ssh "${SSH_OPTS[@]}" "$GW_HOST" "cd $GW_ROOT && $*"
      fi
 }
 stop_gw(){
-     kill "${gw_pidL-}" 2>/dev/null
+     kill "${gw_pid:-}" 2>/dev/null
      gw "pkill -f '[s]rc/gateway'"
 }
 
@@ -43,7 +43,7 @@ for b in publisher publisher_baseline; do
 done
 for b in gateway gateway_baseline; do
      if ! gw "test -x src/$b"; then
-          echo "missing $BIN/$b (run make)" >&2
+          echo "missing src/$b on the gateway machine (run make)" >&2
           exit 1
      fi
 done
@@ -53,7 +53,7 @@ if [ ! -f "$ROOT/keys/ca.pub" ]; then
 fi
 for f in keys/ca.pub certs/ca-cert.pem; do
      if [ "$(sha256sum < "$f")" != "$(gw "sha256sum < $f")" ]; then
-          echo "$f differs between the two machines (copy keys/ and certs/)" 2&>
+          echo "$f differs between the two machines (copy keys/ and certs/)" &2>
           exit 1
      fi
 done
@@ -73,7 +73,7 @@ mkdir -p "$OUT"
           echo "gateway: $GW_HOST (addr $GW_ADDR)"
           echo "gateway commit: $(gw "git rev-parse --short HEAD 2>/dev/null || echo n/a")"
           echo "gateway host: $(gw "uname -a")"
-          echo "gateway governor: $(gw "cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo n/a"
+          echo "gateway governor: $(gw "cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo n/a")
           echo "gateway qdisc: $(gw "tc qdisc show dev $GW_NETIF 2>/dev/null" | tr '\n' ';')"
      fi
      echo "rounds=$ROUNDS warmup=$WARMUP per_round=$PER_ROUND port=$PORT timeout=$TIMEOUT"
@@ -83,8 +83,8 @@ wait_port(){
      for _ in $(seq 50); do
          if gw "ss -ltn" | grep -q ":$PORT "; then
                return 0
-          fi
-          sleep 0.1
+         fi
+         sleep 0.1
      done
      return 1
 }
@@ -102,9 +102,9 @@ trap 'stop_gw; pkill -P $$; exit 130' INT TERM
 for round in $(seq 1 "$ROUNDS"); do
      for cfg in $(shuf -e "${CONFIGS[@]}"); do
           if [ "$cfg" = "baseline" ]; then
-               gw "timeout $TIMEOUT src/gateway_baseline" $PORT certs $TOTAL" > "$GW_CSV" 2>> "$OUT/errors.log" &
+               gw "timeout $TIMEOUT src/gateway_baseline $PORT certs $TOTAL" > "$GW_CSV" 2>> "$OUT/errors.log" &
           else
-               gw "timeout $TIMEOUT $BIN/gateway $cfg $PORT keys $TOTAL" > "$GW_CSV" 2>> "$OUT/errors.log" &
+               gw "timeout $TIMEOUT src/gateway $cfg $PORT keys $TOTAL" > "$GW_CSV" 2>> "$OUT/errors.log" &
           fi
           gw_pid=$!
           if ! wait_port; then
