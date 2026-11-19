@@ -69,12 +69,19 @@ mkdir -p "$OUT"
      echo "host: $(uname -a)"
      echo "governor: $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo n/a)"
      echo "qdisc: $(tc qdisc show dev "$NETIF" 2>/dev/null | tr '\n' ';')"
+     if [ -n "$GW_HOST" ]; then
+          echo "gateway: $GW_HOST (addr $GW_ADDR)"
+          echo "gateway commit: $(gw "git rev-parse --short HEAD 2>/dev/null || echo n/a")"
+          echo "gateway host: $(gw "uname -a")"
+          echo "gateway governor: $(gw "cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo n/a"
+          echo "gateway qdisc: $(gw "tc qdisc show dev $GW_NETIF 2>/dev/null" | tr '\n' ';')"
+     fi
      echo "rounds=$ROUNDS warmup=$WARMUP per_round=$PER_ROUND port=$PORT timeout=$TIMEOUT"
 } > "$OUT/meta.txt"
 
 wait_port(){
      for _ in $(seq 50); do
-         if ss -ltn | grep -q ":$PORT "; then
+         if gw "ss -ltn" | grep -q ":$PORT "; then
                return 0
           fi
           sleep 0.1
@@ -90,31 +97,31 @@ FAILURES=0
 GW_CSV="$OUT/.gateway.csv"
 PUB_CSV="$OUT/.publisher.csv"
 
-trap 'pkill -P $$; exit 130' INT TERM
+trap 'stop_gw; pkill -P $$; exit 130' INT TERM
 
 for round in $(seq 1 "$ROUNDS"); do
      for cfg in $(shuf -e "${CONFIGS[@]}"); do
           if [ "$cfg" = "baseline" ]; then
-               timeout "$TIMEOUT" "$BIN/gateway_baseline" "$PORT" "$ROOT/certs" "$TOTAL" > "$GW_CSV" 2>> "$OUT/errors.log" &
+               gw "timeout $TIMEOUT src/gateway_baseline" $PORT certs $TOTAL" > "$GW_CSV" 2>> "$OUT/errors.log" &
           else
-               timeout "$TIMEOUT" "$BIN/gateway" "$cfg" "$PORT" "$ROOT/keys" "$TOTAL" > "$GW_CSV" 2>> "$OUT/errors.log" &
+               gw "timeout $TIMEOUT $BIN/gateway $cfg $PORT keys $TOTAL" > "$GW_CSV" 2>> "$OUT/errors.log" &
           fi
           gw_pid=$!
           if ! wait_port; then
                echo "round $round $cfg: gateway did not start" >> "$OUT/errors.log"
-               kill "$gw_pid" 2>/dev/null
+               stop_gw
                wait "$gw_pid" 2>/dev/null
                FAILURES=$((FAILURES + 1))
                continue
           fi
           if [ "$cfg" = "baseline" ]; then
-               timeout "$TIMEOUT" "$BIN/publisher_baseline" 127.0.0.1 "$PORT" "$ROOT/certs/ca-cert.pem" "$TOTAL" > "$PUB_CSV" 2>> "$OUT/errors.log"
+               timeout "$TIMEOUT" "$BIN/publisher_baseline" "$GW_ADDR" "$PORT" "$ROOT/certs/ca-cert.pem" "$TOTAL" > "$PUB_CSV" 2>> "$OUT/errors.log"
           else
-               timeout "$TIMEOUT" "$BIN/publisher" "$cfg" 127.0.0.1 "$PORT" "$ROOT/keys/ca.pub" "$TOTAL" > "$PUB_CSV" 2>> "$OUT/errors.log"
+               timeout "$TIMEOUT" "$BIN/publisher" "$cfg" "$GW_ADDR" "$PORT" "$ROOT/keys/ca.pub" "$TOTAL" > "$PUB_CSV" 2>> "$OUT/errors.log"
           fi
           pub_rc=$?
           if [ "$pub_rc" -ne 0 ]; then
-               kill "$gw_pid" 2>/dev/null
+               stop_gw
           fi
           wait "$gw_pid"
           gw_rc=$?
