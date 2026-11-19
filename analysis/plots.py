@@ -1,5 +1,5 @@
-import os
 #!/usr/bin/env python3
+import os
 import sys
 import pandas as pd
 import matplotlib
@@ -73,7 +73,7 @@ def handshake_bytes(df, out):
     if c == "baseline":
       a = BASELINE_AUTH
     else:
-      a = (med(df, c, "gateway", "bytes_server_auth") - REC_OVERHEAD + med(df, c, "publisher", "bytes_client_auth"))
+      a = (med(df, c, "gateway", "bytes_server_auth") - REC_OVERHEAD + med(df, c, "publisher", "bytes_client_auth") - REC_OVERHEAD)
     auth.append(a)
     rest.append(total - a)
   fig, ax = plt.subplots(figsize=(5.5, 2.4))
