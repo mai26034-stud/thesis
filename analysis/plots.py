@@ -48,3 +48,20 @@ def latency(profiles, col, ylabel, out):
   axes[0][0].set_ylabel(ylabel)
   fig.savefig(out)
   plt.close(fig)
+
+def cpu(df, out):
+  fig, ax = plt.subplots(figsize=(5.5, 2.4))
+  y = list (range(len(ORDER)))
+  for role, face in (("gateway",INK), ("publisher","white")):
+    x = [med(df, c, role, "cpu_ns")/1e6 for c in ORDER]
+    ax.scatter(x, y, s=45, facecolor=face, edgecolor=INK, label=role, zorder=3)
+  ax.set_xscale("log")
+  log_axis(ax.axis)
+  ax.set_ysticks(y, ORDER)
+  ax.invert_axis()
+  ax.grid(axis="y", visible=False)
+  ax.set_xlabel("CPU time per handshake, median (ms, log scale)")
+  ax.legend(frameon=False, ncol=2, loc="lower left", bbox_to_anchor=(0, 1))
+  fig.savefig(out)
+  plt.close(fig)
+  
