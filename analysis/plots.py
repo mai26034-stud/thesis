@@ -65,3 +65,28 @@ def cpu(df, out):
   fig.savefig(out)
   plt.close(fig)
   
+def handshake_bytes(df, out):
+  auth, rest = [], []
+  for c in ORDER:
+    total = med(df, c, "gateway", "bytes_total") + med(df, c, "publisher", "bytes_total")
+    if c == "baseline":
+      a = BASELINE_AUTH
+    else:
+      a = (med(df, c, "gateway", "bytes_server_auth") - REC_OVERHEAD + med(df, c, "publisher", "bytes_total")
+    auth.append(a)
+    rest.append(total - a)
+  fig, ax = plt.subplots(figsize=(5.5, 2.4))
+  y = list(range(len(ORDER)))
+  ax.barh(y, auth, height=0.6, color=MUTED, edgecolor="white", label="authentication data")
+  ax.barh(y, rest, left=auth,height=0.6, color=AXIS, edgecolor="white", label="rest of handshake")
+  for i in y:
+    total = auth[i] + rest[i]
+    ax.text(total, i, f"  {total:,.0f} B ({100 * auth[i]/total:.0f}% auth)", va="center", color=INK)
+  ax.set_xlim(0, 1.35 * max(a + r for a, r in zip(auth, rest)))
+  ax.set_ysticks(y, ORDER)
+  ax.invert_yaxis()
+  ax.grid(axis="y", visible=False)
+  ax.set_xlabel("handshake bytes, both directions")
+  ax.legend(frameon=False, ncol=2, loc="lower left", bbox_to_anchor=(0, 1))
+  fig.savefig(out)
+  pit.close(fig)
