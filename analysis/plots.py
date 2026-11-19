@@ -1,4 +1,5 @@
 import os
+#!/usr/bin/env python3
 import sys
 import pandas as pd
 import matplotlib
@@ -13,9 +14,9 @@ REC_OVERHEAD = 27
 BASELINE_AUTH = 293 + 71
 
 plt.rcParams.update({
-  "font_size": 9, "axes.edgecolor": AXIS, "axes.labelcolor": MUTED,
+  "font.size": 9, "axes.edgecolor": AXIS, "axes.labelcolor": MUTED,
   "xtick.color": MUTED, "ytick.color": MUTED, "axes.spines.top": False,
-  "axes.spines.right": False, "axes.grid": False, "axes.axisbelow": True, "grid.color": GRID,
+  "axes.spines.right": False, "axes.grid": True, "axes.axisbelow": True, "grid.color": GRID,
   "grid.linewidth": 0.6, "savefig.dpi": 300, "savefig.bbox": "tight",
 })
 
@@ -29,14 +30,14 @@ def med(df, config, role, col):
 def log_axis(axis):
   axis.set_major_locator(LogLocator(subs=(1, 2, 5)))
   axis.set_major_formatter(FormatStrFormatter("%g"))
-  axis.set_major_formatter(NullFormatter())
+  axis.set_minor_formatter(NullFormatter())
 
 def latency(profiles, col, ylabel, out):
   fig, axes = plt.subplots(1, len(profiles), figsize=(3.2 * len(profiles), 3.0), squeeze=False)
   for ax, (name, df) in  zip(axes[0], profiles):
     pub = df[df["role"] == "publisher"]
     data = [pub[pub["config"] == c][col]/1e6 for c in ORDER]
-    box = ax.boxplot(data, widths=0.55, patch_artist=True), medianprops={"color": "white", "linewidth": 1.5}, whiskerprops={"color": MUTED}, capprops={"color": MUTED}, flierprops={"marker": "o", "markersize": 3, "markeredgecolor": MUTED})
+    box = ax.boxplot(data, widths=0.55, patch_artist=True, medianprops={"color": "white", "linewidth": 1.5}, whiskerprops={"color": MUTED}, capprops={"color": MUTED}, flierprops={"marker": "o", "markersize": 3, "markeredgecolor": MUTED})
     for patch, c in zip(box["boxes"], ORDER):
       patch.set_facecolor(COLOR[c])
       patch.set_edgecolor(COLOR[c])
@@ -56,9 +57,9 @@ def cpu(df, out):
     x = [med(df, c, role, "cpu_ns")/1e6 for c in ORDER]
     ax.scatter(x, y, s=45, facecolor=face, edgecolor=INK, label=role, zorder=3)
   ax.set_xscale("log")
-  log_axis(ax.axis)
-  ax.set_ysticks(y, ORDER)
-  ax.invert_axis()
+  log_axis(ax.xaxis)
+  ax.set_yticks(y, ORDER)
+  ax.invert_yaxis()
   ax.grid(axis="y", visible=False)
   ax.set_xlabel("CPU time per handshake, median (ms, log scale)")
   ax.legend(frameon=False, ncol=2, loc="lower left", bbox_to_anchor=(0, 1))
@@ -72,7 +73,7 @@ def handshake_bytes(df, out):
     if c == "baseline":
       a = BASELINE_AUTH
     else:
-      a = (med(df, c, "gateway", "bytes_server_auth") - REC_OVERHEAD + med(df, c, "publisher", "bytes_total")
+      a = (med(df, c, "gateway", "bytes_server_auth") - REC_OVERHEAD + med(df, c, "publisher", "bytes_client_auth"))
     auth.append(a)
     rest.append(total - a)
   fig, ax = plt.subplots(figsize=(5.5, 2.4))
@@ -83,13 +84,13 @@ def handshake_bytes(df, out):
     total = auth[i] + rest[i]
     ax.text(total, i, f"  {total:,.0f} B ({100 * auth[i]/total:.0f}% auth)", va="center", color=INK)
   ax.set_xlim(0, 1.35 * max(a + r for a, r in zip(auth, rest)))
-  ax.set_ysticks(y, ORDER)
+  ax.set_yticks(y, ORDER)
   ax.invert_yaxis()
   ax.grid(axis="y", visible=False)
   ax.set_xlabel("handshake bytes, both directions")
   ax.legend(frameon=False, ncol=2, loc="lower left", bbox_to_anchor=(0, 1))
   fig.savefig(out)
-  pit.close(fig)
+  plt.close(fig)
 
 def main():
   if len(sys.argv) < 3:
