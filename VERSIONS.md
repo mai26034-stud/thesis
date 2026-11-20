@@ -14,8 +14,8 @@
 - X25519 (as a KEM, ephemeral): pk 32, sk 64 (private || public), ct 32, ss 32
 
 ## Link line
-- AuthKEM tests (test_kem, test_ks, test_record, test_handshake): -lwolfssl -loqs -lm (this order)
-- Baseline (test_baseline): -lwolfssl -lm
+- AuthKEM programs (test_kem, test_ks, test_record, test_handshake, provision, gateway, publisher): -lwofssl -loqs -lm (in that order).
+- Baseline programs (test_baseline, gateway_baseline, publisher_baseline): -lwolfssl -lm
 - libm is needed because objects of the static wolfSSL library that are pulled in by the ECC code use pow() and log().
 - Include: -I vendor/install/include
 - Lib: -L vendor/install/lib
