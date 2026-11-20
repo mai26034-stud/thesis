@@ -105,7 +105,13 @@ int main(int argc, char **argv){
   size_t suffix_len = strlen(NOED_SUFFIX);
   int early = 1;
   if(name_len >= sizeof(kem_name)){
-    fprintf
+    fprintf(stderr, "[publisher] FAIL: can not read CA public key\n");
+    return 1;
+  }
+  memcpy(kem_name, argv[1], name_len + 1);
+  if(name_len > suffix_len && strcmp(kem_name + name_len - suffix_len, NOED_SUFFIX) == 0){
+    kem_name[name_len - suffix_len] = '\0';
+    early = 0;
   }
   signal(SIGPIPE, SIG_IGN);
   uint8_t ca_pub[CA_PUB_LEN];
@@ -118,7 +124,7 @@ int main(int argc, char **argv){
   fflush(stdout);
   int failures = 0;
   for(long i = 1; i <= count; i++){
-    failures += one_session(argv[1], argv[2], (uint16_t)port, ca_pub, (int)i);
+    failures += one_session(kem_name, early, argv[2], (uint16_t)port, ca_pub, (int)i);
   }
   return (failures > 0) ? 1 : 0;
 }
