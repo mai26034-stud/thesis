@@ -164,13 +164,23 @@ Run from the publisher machine. Requirements: ssh login without a password (`ssh
 
 ## Ablation without early data
 
-With `NOED=1`, the configurations `ML-KEM-768-noed`, `HQC-3-noed` and `X-Wing-noed` are added to each round.
+With `NOED=1`, the configurations `ML-KEM-768-noed`, `HQC-3-noed` and `X-Wing-noed` are added to each round. In these, the publisher sends CONNECT only after the server's Finished, so the cost of waiting for explicit server authentication can be measured. The baseline has no such variant, since TLS 1.3 already waits for the server's Finished. In the `-noed` configurations, `client_ready_ns` marks when the keys are ready, not when data is sent; the comparison uses `puback_ns`.
+
+## Analysis
+
+```
+python3 analysis/analyze.py results/<label>/raw.csv
+python3 analysis/plots.py results/figures localhost=results/<label>/raw.csv
+cellular=results/<label2>/raw.csv
+```
+
+Final measurements are taken on a Raspberry Pi; results from development machines are not used in the thesis.
 
 ## Status
 
-- Done: KEM layer, key schedule, record layer, AuthKEM handshake with encrypted flight and Finished messages, classical baseline, MQTT packet layer.
-- In progress: MQTT over the protected channel, gateway and publisher, measurement harness on Raspberry Pi.
+- Done: KEM layer, key schedule, record layer, AuthKEM handshake with ear;y application data, classical baseline, MQTT pipeline (gateway and publisher), experiment harness (interleaved rounds, network emulation, two-machine-mode, early-data ablation), analysis and figures. Memory checked with Valgrind on success and failure paths.
+- Remaining: measurements on the Raspberry Pi testbed; integration with the VO/CVO scenario.
 
-## Test certificates
+## Test certificates and keys
 
 The files in `certs/` (including private keys) were generated offline with the OpenSSL CLI for the baseline experiments only. They have no use outside of this prototype.
