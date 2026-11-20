@@ -98,7 +98,20 @@ The baseline pins in code (baseline.c, both sides):
 - The Raspberry Pi build is recorded separately.
 
 ## Experiment Harness
+- run_experiments.sh: every round runs all configurations once, in a random order (shuf); a new gateway and publisher per configuration and round; the first WARMUP are marked and excluded from the analysis.
+- netem.sh: prio qdisc with 4 bands; netem on band 1:4; u32 filters on destination and source port 19500, so that only measured traffic is affected.
+- Profiles (per direction): wifi = delay 5ms, loss 0.1%; cellular = delay 25ms, loss 0.5%, rate 5mbit; constrained = delay 100ms, loss 1%, rate 250kbit. Initial values; to be justified from the literature.
+- On lo, each packet passes netem once (RTT = 2 * delay). In two-machine mode, netem.sh runs on both machines.
 
 ## Memory checks (Valgrind)
+- 2026-11-18, commit 69f3a73, `valgrind --leak-check=full`:
+- test_handshake (all_processes, including the forked server): 0 errors; 0 bytes definitely or indirectly lost.
+- Failure path (gateway ML-KEM-768, publisher HQC-3; the handshake fails on both sides): "All heap blocks were freed", 0 errors, on both sides.
 
 ## Raspberry Pi
+To be filled in when the testbed is set up.
+- Model and RAM: TBD
+- OS and kernel: TBD (`cat /etc/os-release`, `uname -a`)
+- Compiler: TBD (`gcc --version`)
+- CPU governor: performance (`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`)
+- ARMv8 Cryptography Extensions: TBD (`grep -m1 Featurs /proc/cpuinfo`, look for aes, pmull, sha2). The Pi 4 (BCM2711) does not have them; the Pi 5 (BCM2712) does.
