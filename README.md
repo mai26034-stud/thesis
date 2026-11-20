@@ -152,7 +152,7 @@ Requirements: Mosquitto listening on localhost:1883 (on the gateway machine), th
 - Output in `results/<label>/`: `raw.csv` (all rows, with `round` and `warmup` columns), `meta.txt` (date, commit, host, CPU governor, qdisc, parameters) and `errors.log`.
 - Recorded per connection and role: per-phase timings, total handshake time (`total_ns`), time until the client can send data (`client_ready_ns`), time from TCP connect to PUBACK (`puback_ns`), process CPU time (`cpu_ns`), peak memory (`max_rss_kb`), and bytes sent per message type.
 
-## Network emulation
+### Network emulation
 
 ```
 sudo ./scripts/netem.sh <interface> <off|wifi|cellular|constrained>
@@ -167,7 +167,7 @@ sudo ./scripts/netem.sh <interface> <off|wifi|cellular|constrained>
 - Only traffic to and from port 19500 is affected; other traffic (including the gateway's connection to Mosquitto) is not.
 - netem acts on outgoing packets. On `lo` every packet passes once, so the round-trip time is 2 * delay. With two machines, run the script on both machines (each on its own interface), in order to get the same behaviour.
 
-## Two-machine mode
+### Two-machine mode
 
 ```
 GW_HOST=user@192.168.1.20 NETIF=wlan0 GW_NETIF=eth0 ./scripts/run_experiments.sh <label>
@@ -175,11 +175,11 @@ GW_HOST=user@192.168.1.20 NETIF=wlan0 GW_NETIF=eth0 ./scripts/run_experiments.sh
 
 Run from the publisher machine. Requirements: ssh login without a password (`ssh-keygen`, `ssh-copy-id`), the same commit built on both machines, the same `keys/` and `certs/` on both machines (the script does check this), and Mosquitto on the gateway machine.
 
-## Ablation without early data
+### Ablation without early data
 
 With `NOED=1`, the configurations `ML-KEM-768-noed`, `HQC-3-noed` and `X-Wing-noed` are added to each round. In these, the publisher sends CONNECT only after the server's Finished, so the cost of waiting for explicit server authentication can be measured. The baseline has no such variant, since TLS 1.3 already waits for the server's Finished. In the `-noed` configurations, `client_ready_ns` marks when the keys are ready, not when data is sent; the comparison uses `puback_ns`.
 
-## Analysis
+### Analysis
 
 ```
 python3 analysis/analyze.py results/<label>/raw.csv
