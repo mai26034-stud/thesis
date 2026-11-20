@@ -13,6 +13,7 @@ GW_ADDR=${GW_ADDR:-${GW_HOST#*@}}
 GW_ADDR=${GW_ADDR:-127.0.0.1}
 GW_ROOT=${GW_ROOT:-thesis}
 GW_NETIF=${GW_NETIF:-$NETIF}
+NOED=${NOED:-0}
 LABEL=${1:-$(date +%Y%m%d-%H%M%S)}
 
 cd "$(dirname "$0")/.." || exit 1
@@ -20,6 +21,9 @@ ROOT=$(pwd)
 BIN="$ROOT/src"
 OUT="$ROOT/results/$LABEL"
 CONFIGS=("ML-KEM-768" "HQC-3" "X-Wing" "baseline")
+if [ "$NOED" = "1" ]; then
+     CONFIGS+=("ML-KEM-768-noed" "HQC-3-noed" "W-Wing-noed")
+fi
 TOTAL=$((WARMUP + PER_ROUND))
 SSH_OPTS=(-o BatchMode=yes -o ControlMaster=auto -o ControlPath=/tmp/thesis-ssh-%C -o ControlPersist=120)
 
@@ -76,7 +80,7 @@ mkdir -p "$OUT"
           echo "gateway governor: $(gw "cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo n/a")"
           echo "gateway qdisc: $(gw "tc qdisc show dev $GW_NETIF 2>/dev/null" | tr '\n' ';')"
      fi
-     echo "rounds=$ROUNDS warmup=$WARMUP per_round=$PER_ROUND port=$PORT timeout=$TIMEOUT"
+     echo "rounds=$ROUNDS warmup=$WARMUP per_round=$PER_ROUND port=$PORT timeout=$TIMEOUT noed=$NOED"
 } > "$OUT/meta.txt"
 
 wait_port(){
@@ -89,7 +93,7 @@ wait_port(){
      return 1
 }
 tag(){
-     awk -F, -v r="$1" -v w="$WARMUP" 'NR > 1 { print r "," ($3 <= w ? 1 : 0) "," $0 }' "$2"
+     awk -F, -v OFS=, -v r="$1" -v w="$WARMUP" -v c="$3" 'NR > 1 { $1 = c; print r, ($3 <= w ? 1 : 0), $0 }' "$2"
 }
 
 HEADER_DONE=0
@@ -104,7 +108,7 @@ for round in $(seq 1 "$ROUNDS"); do
           if [ "$cfg" = "baseline" ]; then
                gw "timeout $TIMEOUT src/gateway_baseline $PORT certs $TOTAL" > "$GW_CSV" 2>> "$OUT/errors.log" &
           else
-               gw "timeout $TIMEOUT src/gateway $cfg $PORT keys $TOTAL" > "$GW_CSV" 2>> "$OUT/errors.log" &
+               gw "timeout $TIMEOUT src/gateway ${cfg%-noed} $PORT keys $TOTAL" > "$GW_CSV" 2>> "$OUT/errors.log" &
           fi
           gw_pid=$!
           if ! wait_port; then
@@ -133,8 +137,8 @@ for round in $(seq 1 "$ROUNDS"); do
                echo "round,warmup,$(head -1 "$PUB_CSV")" > "$OUT/raw.csv"
                HEADER_DONE=1
           fi
-          tag "$round" "$PUB_CSV" >> "$OUT/raw.csv"
-          tag "$round" "$GW_CSV" >> "$OUT/raw.csv"
+          tag "$round" "$PUB_CSV" "$cfg" >> "$OUT/raw.csv"
+          tag "$round" "$GW_CSV" "$cfg" >> "$OUT/raw.csv"
           echo "round $round/$ROUNDS: $cfg done"
      done
 done
