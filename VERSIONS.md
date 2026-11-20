@@ -115,3 +115,8 @@ To be filled in when the testbed is set up.
 - Compiler: TBD (`gcc --version`)
 - CPU governor: performance (`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`)
 - ARMv8 Cryptography Extensions: TBD (`grep -m1 Featurs /proc/cpuinfo`, look for aes, pmull, sha2). The Pi 4 (BCM2711) does not have them; the Pi 5 (BCM2712) does.
+- liboqs build command: TBD. Check that the aarch64 ML-KEM implementation is enabled in oqsconfig.h.
+- wolfSSL build command: TBD (ARM assembly options; verify the macros in options.h).
+- Mosquitto version: TBD
+- Topology: which machine runs the publisher and which the gateway; network (Ethernet or Wi-Fi): TBD
+- liboqs speed_kem on the Pi: TBD
