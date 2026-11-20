@@ -22,7 +22,7 @@ BIN="$ROOT/src"
 OUT="$ROOT/results/$LABEL"
 CONFIGS=("ML-KEM-768" "HQC-3" "X-Wing" "baseline")
 if [ "$NOED" = "1" ]; then
-     CONFIGS+=("ML-KEM-768-noed" "HQC-3-noed" "W-Wing-noed")
+     CONFIGS+=("ML-KEM-768-noed" "HQC-3-noed" "X-Wing-noed")
 fi
 TOTAL=$((WARMUP + PER_ROUND))
 SSH_OPTS=(-o BatchMode=yes -o ControlMaster=auto -o ControlPath=/tmp/thesis-ssh-%C -o ControlPersist=120)
