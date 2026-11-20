@@ -76,7 +76,7 @@ The baseline pins in code (baseline.c, both sides):
 - Server credential (AuthKEM): id_len(2) | identity | pk_len(2) | KEM public key | sig_len(2) | signature. The signature is ECDSA P-256 with SHA-256 (DER, at most 72 bytes) by a test CA, the same signature algorithm as the baseline certificates. The CA signature therefore remains classical in all configurations.
 - Transcript hash: a running SHA-256 state, updated once per message. key_schedule_ns covers HKDF, HMAC and the transcript hash finalization. Hashing of each message is included only in total_ns.
 - Baseline custom I/O callbacks (baseline.c): recv() returning 0 is mapped to WOLFSSL_CBIO_ERR_CONN_CLOSE, and errno values to the WOLFSSL_CBIO_ERR_* codes of wolfssl/error-ssl.h. Returning 0 instead made wolfSSL retry forever after the peer closed the connection.
-- Early application data: the AuthKEM publisher sends the MQTT CONNECT right after its own Finished (draft-06). The ear;y-data ablation (`-noed` configurations) sends it after the server's Finished instead.
+- Early application data: the AuthKEM publisher sends the MQTT CONNECT right after its own Finished (draft-06). The early-data ablation (`-noed` configurations) sends it after the server's Finished instead.
 - The gateway serves one connection at a time.
 
 ## Specification conformance
@@ -105,7 +105,7 @@ The baseline pins in code (baseline.c, both sides):
 
 ## Memory checks (Valgrind)
 - 2026-11-18, commit 69f3a73, `valgrind --leak-check=full`:
-- test_handshake (all_processes, including the forked server): 0 errors; 0 bytes definitely or indirectly lost.
+- test_handshake (all processes, including the forked server): 0 errors; 0 bytes definitely or indirectly lost.
 - Failure path (gateway ML-KEM-768, publisher HQC-3; the handshake fails on both sides): "All heap blocks were freed", 0 errors, on both sides.
 
 ## Raspberry Pi
@@ -114,7 +114,7 @@ To be filled in when the testbed is set up.
 - OS and kernel: TBD (`cat /etc/os-release`, `uname -a`)
 - Compiler: TBD (`gcc --version`)
 - CPU governor: performance (`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`)
-- ARMv8 Cryptography Extensions: TBD (`grep -m1 Featurs /proc/cpuinfo`, look for aes, pmull, sha2). The Pi 4 (BCM2711) does not have them; the Pi 5 (BCM2712) does.
+- ARMv8 Cryptography Extensions: TBD (`grep -m1 Features /proc/cpuinfo`, look for aes, pmull, sha2). The Pi 4 (BCM2711) does not have them; the Pi 5 (BCM2712) does.
 - liboqs build command: TBD. Check that the aarch64 ML-KEM implementation is enabled in oqsconfig.h.
 - wolfSSL build command: TBD (ARM assembly options; verify the macros in options.h).
 - Mosquitto version: TBD
