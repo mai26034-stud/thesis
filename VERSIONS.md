@@ -5,6 +5,9 @@
 - Compiler: gcc 13.3.0
 - Build flags: -Wall -O2 (Makefile)
 - Analysis: Python 3.12.3, pandas 2.1.4, numpy 1.26.4, scipy 1.11.4
+- Figures: matplotlib X (`python3 -c "import matplotlib; print(matplotlib.__version__)"`)
+- Network emulation: tc from iproute2 X (`tc -V`)
+- Memory checks: Valgrind X (`valgrind --version`)
 - Development machine: Intel core i5-10400, Ubuntu 24.04 on WSL2
 
 ## KEM sizes (bytes)
@@ -72,6 +75,9 @@ The baseline pins in code (baseline.c, both sides):
 - TCP_NODELAY is set on every connection (AuthKEM and baseline), so that Nagle's algorithm combined with delayed ACKs does not add latency to flights of consecutive messages.
 - Server credential (AuthKEM): id_len(2) | identity | pk_len(2) | KEM public key | sig_len(2) | signature. The signature is ECDSA P-256 with SHA-256 (DER, at most 72 bytes) by a test CA, the same signature algorithm as the baseline certificates. The CA signature therefore remains classical in all configurations.
 - Transcript hash: a running SHA-256 state, updated once per message. key_schedule_ns covers HKDF, HMAC and the transcript hash finalization. Hashing of each message is included only in total_ns.
+- Baseline custom I/O callbacks (baseline.c): recv() returning 0 is mapped to WOLFSSL_CBIO_ERR_CONN_CLOSE, and errno values to the WOLFSSL_CBIO_ERR_* codes of wolfssl/error-ssl.h. Returning 0 instead made wolfSSL retry forever after the peer closed the connection.
+- Early application data: the AuthKEM publisher sends the MQTT CONNECT right after its own Finished (draft-06). The ear;y-data ablation (`-noed` configurations) sends it after the server's Finished instead.
+- The gateway serves one connection at a time.
 
 ## Specification conformance
 - AuthKEM handshake: draft-celi-wiggers-tls-authkem-06. Revision -07 (May of 2026) is a version bump only, according to its changelog, with the implication being that the implementation applies to both.
