@@ -90,3 +90,9 @@ The baseline pins in code (baseline.c, both sides):
 - HQC-3: portable C implementation only; liboqs 0.16.0 provides no optimized variant.
 - liboqs speed_kem on the development machine: HQC-3 keygen 5.0 ms, encaps 10.2 ms, decaps 15.1 ms; ML-KEM-768 keygen 10.9 μs, encaps 11.1 μs, decaps 13.8 μs.
 - The Raspberry Pi build is recorded separately.
+
+## Experiment Harness
+
+## Memory checks (Valgrind)
+
+## Raspberry Pi
