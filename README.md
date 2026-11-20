@@ -170,7 +170,8 @@ With `NOED=1`, the configurations `ML-KEM-768-noed`, `HQC-3-noed` and `X-Wing-no
 ### Analysis
 
 ```
-python3 analysis/analyze.py results/<label>/raw.csv python3 analysis/plots.py results/figures localhost=results/<label>/raw.csv
+python3 analysis/analyze.py results/<label>/raw.csv
+python3 analysis/plots.py results/figures localhost=results/<label>/raw.csv
 cellular=results/<label2>/raw.csv
 ```
 
