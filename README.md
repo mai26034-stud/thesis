@@ -78,7 +78,12 @@ Dependencies (liboqs 0.16.0, wolfSSL 5.9.2) are built from source into "vendor/i
 ```
 cd src
 make
+cd ..
+src/provision keys
 ```
+
+`provision` writes the CA public key (`ca.pub`) and, for each AuthKEM configuration, the server credential (`<KEM>.cred`) and the KEM private key (`<KEM>.sk`).
+
 ## Tests
 
 | TEST | What it checks |
@@ -90,6 +95,8 @@ make
 | `./test_transport` | TCP transport |
 | `./test_mqtt` | MQTT packet encoding and parsing |
 | `./mqtt_smoke` | CONNECT / PUBLISH / PUBACK / DISCONNECT against Mosquitto on localhost:1883 |
+| `./test_handshake` | AuthKEM handshakes over loopback for all three configurations, with early data; prints CSV |
+| `./test_BASELINe` | Classical TLS 1.3 handshakes over loopback; prints CSV |
 
 Each test prints its result and exits with the number of failures (0 failures for success).
 
@@ -104,6 +111,25 @@ python3 analyze.py
 ```
 
 Each configuration runs 3 warm-up handshakes followed by 30 measured ones. Per-phase timings (key generation, encapsulation/decapsulation, credential verification, key schedule, total) and bytes sent are recorded per role. Final measurements are taken on a Raspberry Pi; results from development machines are not used in the thesis.
+
+## Running experiments
+
+Requirements: Mosquitto listening on localhost:1883 (on the gateway machine), the programs built with `make`, and the keys created with `provision`.
+
+```
+./scripts/run_experiments.sh <label>
+```
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `ROUNDS` | 10 | number of rounds |
+|`WARMUP` | 2 | warm-up connections per configuration and round (excluded from analysis) |
+| `PER_ROUND` | 10 | measured connections per configuration and round |
+| `PORT` | 19500 | gateway port |
+| `TIMEOUT` | 300 | time limit per program run (seconds) |
+| `NETIF` | lo | network interface (recorded in meta.txt) |
+| `NOED` | 0 | 1 adds the ablation configurations without early data |
+| `GW_HOST` | empty | empty: everything runs locally; `user@host`: the gateway runs on that machine via ssh |
 
 ## Status
 
