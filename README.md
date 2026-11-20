@@ -2,7 +2,7 @@
 
 Prototype implementation for the MSc thesis *"Post-Quantum and Hybrid KEM Authentication for TLS-Secured IoT Messaging: A Prototype-Based Performance Evaluation on Raspberry Pi"*, MSc in Applied Informatics, University of Macedonia.
 
-The prototype implements a KEM-based server authentication for TLS 1.3, following the AuthKEM design (draft-celi-wiggers-tls-authkem), and compares it with a classical, signature-based TLS 1.3 handshake. The target use case is MQTT telemetry from IoT devices.
+The prototype implements a KEM-based server authentication for TLS 1.3, following the AuthKEM design (draft-celi-wiggers-tls-authkem), and compares it with a classical, signature-based TLS 1.3 handshake. Both are integrated into an MQTT telemetry pipeline (publisher, gateway, Mosquitto broker), so that the cost of authentication is measured inside a complete IoT application.
 
 ## Compared configurations
 
@@ -31,7 +31,18 @@ ClientHello (ephemeral pk)          ------->
 
 - Key schedule: Handshake Secret -> Authenticated Handshake Secret -> Main Secret, with traffic secrets derived at the transcript points defined in the draft.
 - Finished keys are derived from the Main Secret.
+- The client sends its first application data (the MQTT CONNECT) right after its own Finished, before the server's Finished, as the draft allows. This data is implicitly authenticated: only he holder of the server's KEM private key can decrypt it. Explicit server authentication completes when the server's Finished is verified.
 - Record protection: TLS 1.3 record layer with AES-128-GCM (TLS_AES_128_GCM_SHA256), the same cipher suite pinned in the baseline.
+
+## Measurement pipeline
+
+```
+publisher -- (AuthKEM or TLS 1.3, TCP 19500)--> gateway --(MQTT, 127.0.0.1:1883)--> Mosquitto
+```
+
+- The publisher (the IoT device) connects, runs the handshake and sends MQTT CONNECT as early application data. After CONNACK it sends a PUBLISH (QoS 1, SenML JSWON on topic `tele/D001/3303/0/5700`), waits for the PUBACK and sends DISCONNECT.
+- The gateway terminates the protected channel and relays the MQTT packets to the local Mosquitto broker. It serves one connection at a time.
+- Both sides write one CSV row per connection.
 
 ## Repository layout
 
