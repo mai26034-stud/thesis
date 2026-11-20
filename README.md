@@ -130,6 +130,41 @@ Requirements: Mosquitto listening on localhost:1883 (on the gateway machine), th
 | `NETIF` | lo | network interface (recorded in meta.txt) |
 | `NOED` | 0 | 1 adds the ablation configurations without early data |
 | `GW_HOST` | empty | empty: everything runs locally; `user@host`: the gateway runs on that machine via ssh |
+| `GW_ADDR` | host of `GW_HOST` | address the publisher connects to |
+| `GW_ROOT` | thesis | repository folder on the gateway machine (relative to home) |
+| `GW_NETIF` | `NETIF` | network interface of the gateway machine |
+
+- In each round, every configuration runs once, in a random order. Interleaving the configurations means that slow changes of the machine or the network affect all of them equally.
+- For each configuration, a new gateway and publisher are started, with `WARMUP + PER_ROUND` connections. The first `WARMUP` rows are marked with `warmup=1`.
+- Output in `results/<label>/`: `raw.csv` (all rows, with `round` and `warmup` columns), `meta.txt` (date, commitm host, CPU governor, qdisc, parameters) and `errors.log`.
+- Recorded per connection and role: per-phase timings, total handshake time (`total_ns`), time until the client can send data (`client_ready_ns`), time from TCP connect to PUBACK (`puback_ns`), process CPU time (`cpu_ns`), peak memory (`max_rss_kb`), and bytes sent per message type.
+
+## Network emulation
+
+```
+sudo ./scripts/netem.sh <interface> <off|wifi|cellular|constrained>
+```
+
+| Profile | Settings (per direction) |
+|---|---|
+| wifi | delay 5ms, loss 0.1% |
+| cellular | delay 25ms, loss 0.5%, rate 5mbit |
+|constrained | delay 100ms, loss 1%, rate 250kbit |
+
+- Only traffic to and from port 19500 is affected; other traffic (including the gateway's connection to Mosquitto) is not.
+- netem acts on outgoing packets. On `lo` every packet passes once, so the round-trip time is 2 * delay. With two machines, run the script on both machines (each on its own interface), in order to get the same behaviour.
+
+## Two-machine mode
+
+```
+GW_HOST=user@192.168.1.20 NETIF=wlan0 GW_NETIF=eth0 ./scripts/run_experiments.sh <label>
+```
+
+Run from the publisher machine. Requirements: ssh login without a password (`ssh-keygen`, `ssh-copy-id`), the same commit built on both machines, the same `keys/` and `certs/` on both machine (the script does check this), and Mosquitto on the gateway machine.
+
+## Ablation without early data
+
+With `NOED=1`, the configurations `ML-KEM-768-noed`, `HQC-3-noed` and `X-Wing-noed` are added to each round.
 
 ## Status
 
