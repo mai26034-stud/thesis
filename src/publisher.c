@@ -12,6 +12,7 @@
 
 #define CLIENT_ID "D001"
 #define TOPIC "tele/D001/3303/0/5700"
+#define NOED_SUFFIX "-noed"
 
 static int parse_num(const char *s, long min, long max, long *out){
   char *end;
@@ -56,7 +57,8 @@ static int one_session(const char *kem_name, int early, const char *host, uint16
     transport_close(fd);
     return 1;
   }
-  if(!early) r = channel_send(fd, &app_tx, REC_TYPE_DATA, connect_pkt, connect_len, NULL);
+  kem_status_t r = KEM_SUCCESS;
+  if(!early) r = channel_send(fd, &app_tx, REC_TYPE_APPDATA, connect_pkt, connect_len, NULL);
   if(r == KEM_SUCCESS) r = recv_app(fd, &app_rx, resp, sizeof(resp), &n);
   if(r == KEM_SUCCESS) r = mqtt_parse_connack(resp, n, &rc);
   if(r == KEM_SUCCESS && rc != 0) r = KEM_ERROR;
@@ -90,13 +92,20 @@ static int one_session(const char *kem_name, int early, const char *host, uint16
 
 int main(int argc, char **argv){
   if(argc != 6){
-    fprintf(stderr, "usage: %s <KEM> <host> <port> <ca.pub> <connections>\n", argv[0]);
+    fprintf(stderr, "usage: %s <KEM>[-noed] <host> <port> <ca.pub> <connections>\n", argv[0]);
     return 1;
   }
   long port, count;
   if(parse_num(argv[3], 1, 65535, &port) != 0 || parse_num(argv[5], 1, 1000000, &count) != 0){
     fprintf(stderr, "[publisher] FAIL: bad port or connection count\n");
     return 1;
+  }
+  char kem_name[32];
+  size_t name_len = strlen(argv[1]);
+  size_t suffix_len = strlen(NOED_SUFFIX);
+  int early = 1;
+  if(name_len >= sizeof(kem_name)){
+    fprintf
   }
   signal(SIGPIPE, SIG_IGN);
   uint8_t ca_pub[CA_PUB_LEN];
