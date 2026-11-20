@@ -28,7 +28,7 @@ static kem_status_t recv_app(int fd, record_dir_t *rx, uint8_t *buf, size_t cap,
   return KEM_SUCCESS;
 }
 
-static int one_session(const char *kem_name, const char *host, uint16_t port, const uint8_t *ca_pub, int iteration){
+static int one_session(const char *kem_name, int early, const char *host, uint16_t port, const uint8_t *ca_pub, int iteration){
   uint8_t connect_pkt[64];
   uint8_t pkt[256];
   uint8_t resp[REC_MAX_PLAIN + 256];
@@ -51,12 +51,13 @@ static int one_session(const char *kem_name, const char *host, uint16_t port, co
     fprintf(stderr, "[publisher] connect failed (iteration %d)\n", iteration);
     return 1;
   }
-  if(handshake_client(fd, kem_name, ca_pub, connect_pkt, connect_len, &app_tx, &app_rx, &stats, &tm) != KEM_SUCCESS){
+  if(handshake_client(fd, kem_name, ca_pub, early ? connect_pkt : NULL, early ? connect_len : 0, &app_tx, &app_rx, &stats, &tm) != KEM_SUCCESS){
     fprintf(stderr, "[publisher] handshake failed (iteration %d)\n", iteration);
     transport_close(fd);
     return 1;
   }
-  kem_status_t r = recv_app(fd, &app_rx, resp, sizeof(resp), &n);
+  if(!early) r = channel_send(fd, &app_tx, REC_TYPE_DATA, connect_pkt, connect_len, NULL);
+  if(r == KEM_SUCCESS) r = recv_app(fd, &app_rx, resp, sizeof(resp), &n);
   if(r == KEM_SUCCESS) r = mqtt_parse_connack(resp, n, &rc);
   if(r == KEM_SUCCESS && rc != 0) r = KEM_ERROR;
   if(r == KEM_SUCCESS){
