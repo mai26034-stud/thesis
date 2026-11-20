@@ -105,7 +105,7 @@ int main(int argc, char **argv){
   size_t suffix_len = strlen(NOED_SUFFIX);
   int early = 1;
   if(name_len >= sizeof(kem_name)){
-    fprintf(stderr, "[publisher] FAIL: can not read CA public key\n");
+    fprintf(stderr, "[publisher] FAIL: KEM name too long\n");
     return 1;
   }
   memcpy(kem_name, argv[1], name_len + 1);
