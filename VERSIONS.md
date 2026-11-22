@@ -5,9 +5,9 @@
 - Compiler: gcc 13.3.0
 - Build flags: -Wall -O2 (Makefile)
 - Analysis: Python 3.12.3, pandas 2.1.4, numpy 1.26.4, scipy 1.11.4
-- Figures: matplotlib X (`python3 -c "import matplotlib; print(matplotlib.__version__)"`)
-- Network emulation: tc from iproute2 X (`tc -V`)
-- Memory checks: Valgrind X (`valgrind --version`)
+- Figures: matplotlib 3.6.3
+- Network emulation: tc from iproute2 6.1.0
+- Memory checks: Valgrind 3.22.0
 - Development machine: Intel core i5-10400, Ubuntu 24.04 on WSL2
 
 ## KEM sizes (bytes)
