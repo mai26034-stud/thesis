@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import sys
+import numpy as np
 import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
@@ -36,11 +37,12 @@ def latency(profiles, col, ylabel, out):
   fig, axes = plt.subplots(1, len(profiles), figsize=(3.2 * len(profiles), 3.0), squeeze=False)
   for ax, (name, df) in  zip(axes[0], profiles):
     pub = df[df["role"] == "publisher"]
-    data = [pub[pub["config"] == c][col]/1e6 for c in ORDER]
-    box = ax.boxplot(data, widths=0.55, patch_artist=True, medianprops={"color": "white", "linewidth": 1.5}, whiskerprops={"color": MUTED}, capprops={"color": MUTED}, flierprops={"marker": "o", "markersize": 3, "markeredgecolor": MUTED})
-    for patch, c in zip(box["boxes"], ORDER):
-      patch.set_facecolor(COLOR[c])
-      patch.set_edgecolor(COLOR[c])
+    rng = np.random.default_rng(0)
+    for i, c in enumerate(ORDER, start=1):
+      v = pub[pub["config"] == c][col]/1e6
+      x = i + rng.uniform(-0.15, 0.15, len(v))
+      ax.scatter(x, v, s=12, color=COLOR[c], alpha=0.7, linewidths=0, zorder=2)
+      ax.hlines(v.median(), i - 0.3, i + 0.3, color=INK, linewidth=1.5, zorder=3)
     ax.set_yscale("log")
     log_axis(ax.yaxis)
     ax.set_xticks(range(1, len(ORDER) + 1), ORDER, rotation=20)
@@ -92,6 +94,29 @@ def handshake_bytes(df, out):
   fig.savefig(out)
   plt.close(fig)
 
+def ablation(name, df, out):
+  fig, ax = plt.subplots(figsize=(5.5, 2.2))
+  kems = [c for c in ORDER if c!= "baseline"]
+  y = list(range(len(kems)))
+  with_ed = [med(df, c, "publisher", "puback_ns")/1e6 for c in kems]
+  without = [med(df, c + "-noed", "publisher", "puback_ns")/1e6 for c in kems]
+  ax.hlines(y, with_ed, without, color=AXIS, linewidth=2, zorder=1)
+  ax.scatter(with_ed, y, s=45, color=INK, label="early data", zorder=3)
+  ax.scatter(without, y, s=45, facecolor="white", edgecolor=INK, label="no early data", zorder=3)
+  for i in y:
+    ax.text(without[i], i, f" +{without[i] - with_ed[i]:.0f} ms", va="center", color=INK)
+  base = med(df, "baseline", "publisher", "puback_ns")/1e6
+  ax.axvline(base, color=MUTED, linestyle="--", linewidth=1, zorder=0)
+  ax.text(base, -0.85, " baseline", color=MUTED, va="top")
+  ax.set_xlim(0.95 * min(with_ed + [base]), 1.12 * max(without))
+  ax.set_yticks(y, kems)
+  ax.set_ylim(len(kems) - 0.5, -0.9)
+  ax.grid(axis="y", visible=False)
+  ax.set_xlabel(f"connect to PUBACK, median (ms), {name}")
+  ax.legend(frameon=False, ncol=2, loc="lower left", bbox_to_anchor=(0, 1))
+  fig.savefig(out)
+  plt.close(fig)
+
 def main():
   if len(sys.argv) < 3:
     sys.exit("usage: plots.py <out_dir> <profile>=<raw.csv> [<profile>=<raw.csv> ...]")
@@ -107,6 +132,9 @@ def main():
   latency(profiles, "puback_ns", "connect to PUBACK (ms, log scale)", os.path.join(out, "puback.png"))
   cpu(profiles[0][1], os.path.join(out, "cpu.png"))
   handshake_bytes(profiles[0][1], os.path.join(out, "bytes.png"))
+  for name, df in profiles:
+    if df["config"].str.endswith("-noed").any():
+      ablation(name, df, os.path.join(out, f"ablation_{name}.png"))
   print(f"figures written to {out}")
 
 if __name__ == "__main__":
