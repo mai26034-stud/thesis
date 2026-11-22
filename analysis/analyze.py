@@ -1,21 +1,24 @@
+import os
 import sys
 import pandas as pd
 import numpy as np
 from scipy import stats
 import base64
 
+HERE = os.path.dirname(os.path.abspath(__file__))
+
 if len(sys.argv) > 1:
     df = pd.read_csv(sys.argv[1])
     df = df[df["warmup"] == 0]
 else:
-    df1 = pd.read_csv("../src/results.csv")
-    df2 = pd.read_csv("../src/baseline.csv")
+    df1 = pd.read_csv(os.path.join(HERE, "..", "src", "results.csv"))
+    df2 = pd.read_csv(os.path.join(HERE, "..", "src", "baseline.csv"))
     df = pd.concat([df1,df2], ignore_index=True)
 time_cols = ["eph_keypair_ns", "eph_encaps_ns", "eph_decaps_ns", "cred_verify_ns", "auth_encaps_ns", "auth_decaps_ns", "key_schedule_ns", "total_ns", "client_ready_ns", "puback_ns", "cpu_ns"]
 
 AUTHKEM_RECORD_OVERHEAD = 5 + 1 + 16 + 5
 ECDSA_P256_SIG = 71
-SERVER_CERT = "../certs/server-cert.pem"
+SERVER_CERT = os.path.join(HERE, "..", "certs", "server-cert.pem")
 
 def der_len_from_pem(path):
     with open(path) as f:
